@@ -1,0 +1,30 @@
+name: guiproof
+description: "Retrieve and surface persistent GUI behavioral facts for computer-use agents"
+inputs:
+  app-name:
+    description: "Application name to query facts for"
+    required: true
+  app-version:
+    description: "Optional application version filter"
+    required: false
+    default: "unknown"
+  db:
+    description: "Path to the guiproof database"
+    required: false
+    default: "guiproof.db"
+  min-score:
+    description: "Minimum confidence score threshold"
+    required: false
+    default: "0.5"
+runs:
+  using: "composite"
+  steps:
+    - name: Install guiproof
+      shell: bash
+      run: pip install -e "${{ github.action_path }}"
+    - name: Query UI behavioral facts
+      shell: bash
+      run: |
+        guiproof --db "${{ inputs.db }}" query "${{ inputs.app-name }}" \
+          --version "${{ inputs.app-version }}" \
+          --min-score "${{ inputs.min-score }}"

@@ -1,0 +1,122 @@
+[
+  {
+    "type": "function",
+    "function": {
+      "name": "add_ui_fact",
+      "description": "Add a UI behavioral fact to the guiproof store. Call this when an agent has observed a confirmed interaction between a UI element and its outcome in a specific app version.",
+      "strict": true,
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "app_name": {
+            "type": "string",
+            "description": "Application identifier, e.g. 'salesforce', 'gmail'."
+          },
+          "app_version": {
+            "type": "string",
+            "description": "Version string, e.g. '2025.11', 'unknown'."
+          },
+          "element": {
+            "type": "string",
+            "description": "Semantic element description, e.g. 'export-csv-button'."
+          },
+          "action": {
+            "type": "string",
+            "description": "Action performed: 'click', 'type', 'navigate', 'hover'."
+          },
+          "outcome": {
+            "type": "string",
+            "description": "What happened: 'opens-download-dialog', 'error:not-found'."
+          },
+          "context": {
+            "type": "string",
+            "description": "Optional UI context, e.g. 'reports-page'. Omit if unknown."
+          },
+          "confidence": {
+            "type": "number",
+            "description": "Initial confidence in [0.0, 1.0]. Default 1.0."
+          }
+        },
+        "required": ["app_name", "app_version", "element", "action", "outcome", "context", "confidence"],
+        "additionalProperties": false
+      }
+    }
+  },
+  {
+    "type": "function",
+    "function": {
+      "name": "query_ui_facts",
+      "description": "Query UI behavioral facts for a specific application. Call this at session start to load known facts about the target app before interacting with its UI.",
+      "strict": true,
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "app_name": {
+            "type": "string",
+            "description": "Application name to query, e.g. 'salesforce'."
+          },
+          "app_version": {
+            "type": "string",
+            "description": "Optional version filter, e.g. '2025.11'. Omit to get all versions."
+          },
+          "min_score": {
+            "type": "number",
+            "description": "Minimum confidence score threshold in [0.0, 1.0]. Default 0.5."
+          }
+        },
+        "required": ["app_name", "app_version", "min_score"],
+        "additionalProperties": false
+      }
+    }
+  },
+  {
+    "type": "function",
+    "function": {
+      "name": "record_observation",
+      "description": "Record an observation confirming or refuting a previously stored UI behavioral fact. Call after each agent interaction to keep confidence scores accurate.",
+      "strict": true,
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "fact_id": {
+            "type": "string",
+            "description": "The 16-character ID of the UIFact being observed."
+          },
+          "confirmed": {
+            "type": "boolean",
+            "description": "True if the fact still holds; false if the behavior has changed."
+          },
+          "agent_run_id": {
+            "type": "string",
+            "description": "Optional identifier for this agent run, for tracing."
+          }
+        },
+        "required": ["fact_id", "confirmed", "agent_run_id"],
+        "additionalProperties": false
+      }
+    }
+  },
+  {
+    "type": "function",
+    "function": {
+      "name": "bootstrap_ui_context",
+      "description": "Get a text summary of all known UI facts for an application, suitable for injection into an agent system prompt. Call this before starting a computer-use session.",
+      "strict": true,
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "app_name": {
+            "type": "string",
+            "description": "Application name, e.g. 'salesforce'."
+          },
+          "app_version": {
+            "type": "string",
+            "description": "Application version, e.g. '2025.11' or 'unknown'."
+          }
+        },
+        "required": ["app_name", "app_version"],
+        "additionalProperties": false
+      }
+    }
+  }
+]
