@@ -7,7 +7,7 @@ from pathlib import Path
 import pytest
 from fastapi.testclient import TestClient
 
-from guiproof.api import app
+from clickproof.api import app
 
 
 @pytest.fixture

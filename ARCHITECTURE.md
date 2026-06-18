@@ -1,8 +1,8 @@
-# guiproof Architecture
+# clickproof Architecture
 
 ## Overview
 
-guiproof is a pure Python library for storing, scoring, and retrieving UI behavioral facts. It provides a persistent memory layer for computer-use agents, allowing them to accumulate and leverage knowledge about GUI applications across sessions.
+clickproof is a pure Python library for storing, scoring, and retrieving UI behavioral facts. It provides a persistent memory layer for computer-use agents, allowing them to accumulate and leverage knowledge about GUI applications across sessions.
 
 ## Layer Diagram
 
@@ -36,7 +36,7 @@ guiproof is a pure Python library for storing, scoring, and retrieving UI behavi
 
 ### UIFact
 
-The atom of guiproof. A UIFact records what happens when an agent performs a specific action on a specific UI element in a specific application version.
+The atom of clickproof. A UIFact records what happens when an agent performs a specific action on a specific UI element in a specific application version.
 
 - **ID** = SHA-256[:16] of `app_name|app_version|element|action`
 - The same element/action pair in the same app version always produces the same ID
@@ -121,7 +121,7 @@ CREATE TABLE fact_observations (
 
 ## MCP Integration
 
-The MCP server (`guiproof/mcp_server.py`) exposes three tools:
+The MCP server (`clickproof/mcp_server.py`) exposes three tools:
 
 | Tool | Description |
 |------|-------------|
@@ -129,7 +129,7 @@ The MCP server (`guiproof/mcp_server.py`) exposes three tools:
 | `query_facts` | Query facts for an app |
 | `bootstrap_context` | Get a text summary for agent injection |
 
-The MCP server reads the database path from the `GUIPROOF_DB` environment variable.
+The MCP server reads the database path from the `CLICKPROOF_DB` environment variable.
 
 ## Extension Points
 

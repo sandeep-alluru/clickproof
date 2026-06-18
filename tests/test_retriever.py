@@ -6,10 +6,10 @@ import time
 
 import pytest
 
-from guiproof.fact import FactObservation, UIFact
-from guiproof.retriever import FactRetriever
-from guiproof.scorer import FactScorer
-from guiproof.store import FactStore
+from clickproof.fact import FactObservation, UIFact
+from clickproof.retriever import FactRetriever
+from clickproof.scorer import FactScorer
+from clickproof.store import FactStore
 
 
 @pytest.fixture
@@ -106,7 +106,7 @@ class TestFactRetriever:
         for item in pairs:
             fact, score = item
             assert isinstance(fact, UIFact)
-            from guiproof.scorer import FactScore
+            from clickproof.scorer import FactScore
             assert isinstance(score, FactScore)
 
     def test_bootstrap_context_contains_app(

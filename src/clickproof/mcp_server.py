@@ -1,13 +1,13 @@
-"""MCP server for guiproof.
+"""MCP server for clickproof.
 
-Start:  python -m guiproof.mcp_server
-Or:     guiproof-mcp
+Start:  python -m clickproof.mcp_server
+Or:     clickproof-mcp
 
 Add to Claude Desktop (~/.config/claude/claude_desktop_config.json):
     {
         "mcpServers": {
-            "guiproof": {
-                "command": "guiproof-mcp"
+            "clickproof": {
+                "command": "clickproof-mcp"
             }
         }
     }
@@ -27,7 +27,7 @@ def _require_mcp() -> Any:
         return mcp, types, Server
     except ImportError:
         print(
-            "MCP server requires: pip install 'guiproof[mcp]'",
+            "MCP server requires: pip install 'clickproof[mcp]'",
             file=sys.stderr,
         )
         sys.exit(1)
@@ -37,7 +37,7 @@ def run_server() -> None:
     """Start the MCP server on stdio."""
     mcp_mod, types, server_cls = _require_mcp()
 
-    server = server_cls("guiproof")
+    server = server_cls("clickproof")
 
     @server.list_tools()
     async def list_tools() -> list[types.Tool]:

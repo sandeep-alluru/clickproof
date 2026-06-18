@@ -1,11 +1,11 @@
-# GitHub Copilot Instructions — guiproof
+# GitHub Copilot Instructions — clickproof
 
-guiproof: Persistent GUI behavioral facts for computer-use agents
+clickproof: Persistent GUI behavioral facts for computer-use agents
 
 ## Module map
 
 ```
-src/guiproof/
+src/clickproof/
 ├── # TODO: fill in after implementation
 ```
 
@@ -29,6 +29,6 @@ src/guiproof/
 
 ## Adding a new adapter / integration
 
-1. Create `src/guiproof/instrument_<framework>.py`
+1. Create `src/clickproof/instrument_<framework>.py`
 2. Export from `__init__.py`, add to `__all__` alphabetically
 3. Add tests

@@ -1,15 +1,15 @@
-# guiproof
+# clickproof
 
 **Persistent GUI behavioral facts for computer-use agents.**
 
-![guiproof](assets/hero.png)
+![clickproof](assets/hero.png)
 
-[![CI](https://github.com/sandeep-alluru/guiproof/actions/workflows/ci.yml/badge.svg)](https://github.com/sandeep-alluru/guiproof/actions/workflows/ci.yml)
-[![PyPI version](https://img.shields.io/pypi/v/guiproof.svg)](https://pypi.org/project/guiproof/)
-[![Python 3.10+](https://img.shields.io/pypi/pyversions/guiproof.svg)](https://pypi.org/project/guiproof/)
-[![Downloads](https://img.shields.io/pypi/dm/guiproof.svg)](https://pypi.org/project/guiproof/)
+[![CI](https://github.com/sandeep-alluru/clickproof/actions/workflows/ci.yml/badge.svg)](https://github.com/sandeep-alluru/clickproof/actions/workflows/ci.yml)
+[![PyPI version](https://img.shields.io/pypi/v/clickproof.svg)](https://pypi.org/project/clickproof/)
+[![Python 3.10+](https://img.shields.io/pypi/pyversions/clickproof.svg)](https://pypi.org/project/clickproof/)
+[![Downloads](https://img.shields.io/pypi/dm/clickproof.svg)](https://pypi.org/project/clickproof/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
-[![codecov](https://codecov.io/gh/sandeep-alluru/guiproof/branch/main/graph/badge.svg)](https://codecov.io/gh/sandeep-alluru/guiproof)
+[![codecov](https://codecov.io/gh/sandeep-alluru/clickproof/branch/main/graph/badge.svg)](https://codecov.io/gh/sandeep-alluru/clickproof)
 [![Typed](https://img.shields.io/badge/types-mypy-blue)](https://mypy-lang.org/)
 
 [Quick Start](#quick-start) · [How It Works](#how-it-works) · [CLI Reference](#cli-reference) · [GitHub Action](#github-action) · [vs. Alternatives](#vs-alternatives) · [Claude/MCP](#claudemcp) · [Contributing](CONTRIBUTING.md)
@@ -22,11 +22,11 @@ Computer-use agents navigate GUIs blindly. Every session restarts from zero — 
 
 This is expensive. More importantly, it's fragile: apps change, and the agent's cached intuition from training is often wrong.
 
-**guiproof** solves this by giving agents a persistent, confidence-scored memory of UI behavioral facts. Before a session starts, the agent loads what is known about the target app. Observations from every run update confidence scores. When an interface changes, scores decay and the agent adapts.
+**clickproof** solves this by giving agents a persistent, confidence-scored memory of UI behavioral facts. Before a session starts, the agent loads what is known about the target app. Observations from every run update confidence scores. When an interface changes, scores decay and the agent adapts.
 
 ```bash
 # Inject known facts into an agent's system prompt
-guiproof query salesforce --min-score 0.7
+clickproof query salesforce --min-score 0.7
 ```
 
 ---
@@ -71,11 +71,11 @@ flowchart LR
 ## Quick Start
 
 ```bash
-pip install guiproof
+pip install clickproof
 ```
 
 ```python
-from guiproof import UIFact, FactObservation, FactStore, FactRetriever, FactScorer
+from clickproof import UIFact, FactObservation, FactStore, FactRetriever, FactScorer
 import time
 
 with FactStore("my_app.db") as store:
@@ -115,7 +115,7 @@ with FactStore("my_app.db") as store:
 ## CLI Reference
 
 ```
-guiproof [--db PATH] COMMAND [ARGS]
+clickproof [--db PATH] COMMAND [ARGS]
 
 Commands:
   add     APP VERSION ELEMENT ACTION OUTCOME  Stage a UIFact
@@ -129,33 +129,33 @@ Commands:
 
 ```bash
 # Add a fact
-guiproof add salesforce 2025.11 export-csv-button click opens-download-dialog
+clickproof add salesforce 2025.11 export-csv-button click opens-download-dialog
 
 # Confirm it from an agent run
-guiproof observe <fact_id> --confirmed --run-id run_001
+clickproof observe <fact_id> --confirmed --run-id run_001
 
 # Query with minimum score threshold
-guiproof query salesforce --min-score 0.6
+clickproof query salesforce --min-score 0.6
 
 # Get JSON output for scripting
-guiproof query salesforce --json | jq '.facts[].fact.element'
+clickproof query salesforce --json | jq '.facts[].fact.element'
 
 # Show store info
-guiproof status
+clickproof status
 ```
 
 ---
 
 ## GitHub Action
 
-Add guiproof fact queries to any CI/CD workflow:
+Add clickproof fact queries to any CI/CD workflow:
 
 ```yaml
-- uses: sandeep-alluru/guiproof@main
+- uses: sandeep-alluru/clickproof@main
   with:
     app-name: salesforce
     app-version: "2025.11"
-    db: guiproof.db
+    db: clickproof.db
     min-score: "0.5"
 ```
 
@@ -163,7 +163,7 @@ Add guiproof fact queries to any CI/CD workflow:
 
 ## vs. Alternatives
 
-| | guiproof | Plain cache | Vector store | Re-run |
+| | clickproof | Plain cache | Vector store | Re-run |
 |---|---|---|---|---|
 | Confidence-based | ✓ | ✗ | partial | ✗ |
 | Staleness decay | ✓ | ✗ | ✗ | N/A |
@@ -176,14 +176,14 @@ Add guiproof fact queries to any CI/CD workflow:
 
 ## Claude/MCP
 
-guiproof ships a built-in MCP server. Add it to your Claude configuration:
+clickproof ships a built-in MCP server. Add it to your Claude configuration:
 
 ```json
 {
   "mcpServers": {
-    "guiproof": {
-      "command": "guiproof-mcp",
-      "env": { "GUIPROOF_DB": "/path/to/guiproof.db" }
+    "clickproof": {
+      "command": "clickproof-mcp",
+      "env": { "CLICKPROOF_DB": "/path/to/clickproof.db" }
     }
   }
 }
@@ -202,8 +202,8 @@ See `tools/openai-tools.json` for pre-built OpenAI function-calling tool definit
 ## Repository Tree
 
 ```
-guiproof/
-├── guiproof/
+clickproof/
+├── clickproof/
 │   ├── __init__.py        Public API
 │   ├── fact.py            UIFact + FactObservation data models
 │   ├── scorer.py          FactScorer + FactScore
@@ -229,4 +229,4 @@ guiproof/
 
 ## Star History
 
-[![Star History Chart](https://api.star-history.com/svg?repos=sandeep-alluru/guiproof&type=Date)](https://star-history.com/#sandeep-alluru/guiproof&Date)
+[![Star History Chart](https://api.star-history.com/svg?repos=sandeep-alluru/clickproof&type=Date)](https://star-history.com/#sandeep-alluru/clickproof&Date)

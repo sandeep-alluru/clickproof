@@ -1,4 +1,4 @@
-# guiproof — Codex Developer Guide
+# clickproof — Codex Developer Guide
 
 > Read by OpenAI Codex CLI. Supplements AGENTS.md with Codex-specific conventions.
 
@@ -9,7 +9,7 @@ Persistent GUI behavioral facts for computer-use agents
 ## Module map
 
 ```
-src/guiproof/
+src/clickproof/
 ├── # TODO: fill in after implementation
 ```
 

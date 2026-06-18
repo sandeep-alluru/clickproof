@@ -1,4 +1,4 @@
-"""Report formatters — Rich console, JSON, and Markdown output for guiproof."""
+"""Report formatters — Rich console, JSON, and Markdown output for clickproof."""
 
 from __future__ import annotations
 
@@ -7,8 +7,8 @@ import json
 from rich.console import Console
 from rich.table import Table
 
-from guiproof.fact import UIFact
-from guiproof.scorer import FactScore
+from clickproof.fact import UIFact
+from clickproof.scorer import FactScore
 
 
 def _default_console() -> Console:
@@ -32,7 +32,7 @@ def print_facts(
         return
 
     table = Table(
-        title="guiproof — UI Behavioral Facts",
+        title="clickproof — UI Behavioral Facts",
         show_header=True,
         header_style="bold cyan",
     )
@@ -121,7 +121,7 @@ def to_markdown(facts_scores: list[tuple[UIFact, FactScore]]) -> str:
         Markdown string with a header and table.
     """
     lines = [
-        "## guiproof — UI Behavioral Facts",
+        "## clickproof — UI Behavioral Facts",
         "",
         f"_{len(facts_scores)} fact(s) retrieved_",
         "",

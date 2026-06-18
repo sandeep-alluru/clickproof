@@ -6,8 +6,8 @@ import time
 
 import pytest
 
-from guiproof.fact import FactObservation, UIFact
-from guiproof.store import FactStore
+from clickproof.fact import FactObservation, UIFact
+from clickproof.store import FactStore
 
 
 class TestFactStoreFacts:

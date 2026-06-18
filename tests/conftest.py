@@ -1,4 +1,4 @@
-"""Shared pytest fixtures for guiproof tests."""
+"""Shared pytest fixtures for clickproof tests."""
 
 from __future__ import annotations
 
@@ -6,8 +6,8 @@ import time
 
 import pytest
 
-from guiproof.fact import FactObservation, UIFact
-from guiproof.store import FactStore
+from clickproof.fact import FactObservation, UIFact
+from clickproof.store import FactStore
 
 
 @pytest.fixture

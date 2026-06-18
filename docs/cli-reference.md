@@ -1,6 +1,6 @@
 # CLI Reference
 
-## `guiproof <command>`
+## `clickproof <command>`
 
 TODO: document CLI commands and options
 

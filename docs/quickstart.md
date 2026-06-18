@@ -3,7 +3,7 @@
 ## Install
 
 ```bash
-pip install guiproof
+pip install clickproof
 ```
 
 ## Step 1
@@ -17,7 +17,7 @@ TODO: second step
 ## Python API
 
 ```python
-import guiproof
+import clickproof
 
 # TODO: add real API example
 ```

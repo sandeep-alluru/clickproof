@@ -1,4 +1,4 @@
-"""guiproof FastAPI server — REST endpoints for UI behavioral facts."""
+"""clickproof FastAPI server — REST endpoints for UI behavioral facts."""
 
 from __future__ import annotations
 
@@ -7,19 +7,19 @@ import time
 from fastapi import FastAPI, HTTPException, Query
 from pydantic import BaseModel
 
-import guiproof
-from guiproof.fact import FactObservation, UIFact
-from guiproof.retriever import FactRetriever
-from guiproof.scorer import FactScorer
-from guiproof.store import FactStore
+import clickproof
+from clickproof.fact import FactObservation, UIFact
+from clickproof.retriever import FactRetriever
+from clickproof.scorer import FactScorer
+from clickproof.store import FactStore
 
 app = FastAPI(
-    title="guiproof API",
+    title="clickproof API",
     description="Persistent GUI behavioral facts for computer-use agents.",
-    version=guiproof.__version__,
+    version=clickproof.__version__,
 )
 
-_DEFAULT_DB = "guiproof.db"
+_DEFAULT_DB = "clickproof.db"
 
 
 def _store(db: str = _DEFAULT_DB) -> FactStore:
@@ -53,7 +53,7 @@ class ObservationIn(BaseModel):
 @app.get("/health")
 def health() -> dict[str, str]:
     """Health check — returns status and version."""
-    return {"status": "ok", "version": guiproof.__version__}
+    return {"status": "ok", "version": clickproof.__version__}
 
 
 @app.post("/fact")

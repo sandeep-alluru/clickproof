@@ -3,7 +3,7 @@
     "type": "function",
     "function": {
       "name": "add_ui_fact",
-      "description": "Add a UI behavioral fact to the guiproof store. Call this when an agent has observed a confirmed interaction between a UI element and its outcome in a specific app version.",
+      "description": "Add a UI behavioral fact to the clickproof store. Call this when an agent has observed a confirmed interaction between a UI element and its outcome in a specific app version.",
       "strict": true,
       "parameters": {
         "type": "object",

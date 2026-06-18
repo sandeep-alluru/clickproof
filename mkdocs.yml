@@ -1,8 +1,8 @@
-site_name: guiproof
+site_name: clickproof
 site_description: Persistent GUI behavioral facts for computer-use agents
-site_url: https://sandeep-alluru.github.io/guiproof
-repo_url: https://github.com/sandeep-alluru/guiproof
-repo_name: sandeep-alluru/guiproof
+site_url: https://sandeep-alluru.github.io/clickproof
+repo_url: https://github.com/sandeep-alluru/clickproof
+repo_name: sandeep-alluru/clickproof
 edit_uri: edit/main/docs/
 
 theme:
@@ -88,6 +88,6 @@ nav:
 extra:
   social:
     - icon: fontawesome/brands/github
-      link: https://github.com/sandeep-alluru/guiproof
+      link: https://github.com/sandeep-alluru/clickproof
     - icon: fontawesome/brands/python
-      link: https://pypi.org/project/guiproof/
+      link: https://pypi.org/project/clickproof/

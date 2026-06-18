@@ -1,4 +1,4 @@
-"""UIFact and FactObservation data models — the content-addressed primitives of guiproof."""
+"""UIFact and FactObservation data models — the content-addressed primitives of clickproof."""
 
 from __future__ import annotations
 
@@ -17,7 +17,7 @@ def _sha16(text: str) -> str:
 class UIFact:
     """A behavioral fact about a UI element in a specific app version.
 
-    UIFacts are the atoms of guiproof. Two UIFacts with the same app_name,
+    UIFacts are the atoms of clickproof. Two UIFacts with the same app_name,
     app_version, element, and action always have the same ID.
 
     Attributes:

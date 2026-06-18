@@ -1,17 +1,17 @@
 ---
-description: guiproof coding rules and architecture context
+description: clickproof coding rules and architecture context
 globs: ["src/**/*.py", "tests/**/*.py"]
 alwaysApply: true
 ---
 
-# guiproof — Cursor Rules
+# clickproof — Cursor Rules
 
 ## What this project does
 Persistent GUI behavioral facts for computer-use agents
 
 ## Module map
 ```
-src/guiproof/
+src/clickproof/
 ├── # TODO: fill in after implementation
 ```
 

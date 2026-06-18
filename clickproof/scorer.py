@@ -7,10 +7,10 @@ import time
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any
 
-from guiproof.fact import FactObservation, UIFact
+from clickproof.fact import FactObservation, UIFact
 
 if TYPE_CHECKING:
-    from guiproof.store import FactStore
+    from clickproof.store import FactStore
 
 
 @dataclass
@@ -92,7 +92,7 @@ class FactScorer:
         base_ratio = confirmed_count / count
         staleness_days = (now - last_observed) / 86400.0
         staleness_decay = math.exp(-0.1 * staleness_days)
-        count_boost = min(1.0, math.log(1 + count) / math.log(11))
+        count_boost = min(1.0, 0.5 + 0.5 * math.log(1 + count) / math.log(11))
 
         score = base_ratio * staleness_decay * count_boost
 

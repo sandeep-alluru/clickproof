@@ -1,7 +1,7 @@
-"""FastAPI REST wrapper for guiproof.
+"""FastAPI REST wrapper for clickproof.
 
-Start:   uvicorn guiproof.api:app --reload
-Install: pip install "guiproof[api]"
+Start:   uvicorn clickproof.api:app --reload
+Install: pip install "clickproof[api]"
 Docs:    http://localhost:8000/docs
 """
 
@@ -12,11 +12,11 @@ try:
     from pydantic import BaseModel
 except ImportError as exc:
     raise ImportError(
-        "API server requires: pip install 'guiproof[api]'"
+        "API server requires: pip install 'clickproof[api]'"
     ) from exc
 
 app = FastAPI(
-    title="guiproof API",
+    title="clickproof API",
     description="Persistent GUI behavioral facts for computer-use agents",
     version="0.1.0",
 )
@@ -30,7 +30,7 @@ class HealthResponse(BaseModel):
 @app.get("/health", response_model=HealthResponse)
 async def health() -> dict[str, str]:
     """Liveness probe."""
-    from guiproof import __version__
+    from clickproof import __version__
     return {"status": "ok", "version": __version__}
 
 

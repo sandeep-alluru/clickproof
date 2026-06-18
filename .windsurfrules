@@ -1,11 +1,11 @@
-# guiproof — Windsurf Rules
+# clickproof — Windsurf Rules
 
 ## Project overview
 Persistent GUI behavioral facts for computer-use agents
 
 ## Module map
 ```
-src/guiproof/
+src/clickproof/
 ├── # TODO: fill in after implementation
 ```
 

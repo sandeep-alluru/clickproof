@@ -1,10 +1,10 @@
 # GitHub Action
 
-Use guiproof directly in your GitHub Actions workflow:
+Use clickproof directly in your GitHub Actions workflow:
 
 ```yaml
-- name: guiproof
-  uses: sandeep-alluru/guiproof@v0.1.0
+- name: clickproof
+  uses: sandeep-alluru/clickproof@v0.1.0
   with:
     # TODO: add action inputs
     fail-on-error: "true"
@@ -13,9 +13,9 @@ Use guiproof directly in your GitHub Actions workflow:
 Or use the CLI directly:
 
 ```yaml
-- name: Install guiproof
-  run: pip install guiproof
+- name: Install clickproof
+  run: pip install clickproof
 
-- name: Run guiproof
-  run: guiproof --help
+- name: Run clickproof
+  run: clickproof --help
 ```

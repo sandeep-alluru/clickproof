@@ -8,9 +8,9 @@ import json
 import pytest
 from rich.console import Console
 
-from guiproof.fact import UIFact
-from guiproof.report import print_fact, print_facts, to_json, to_markdown
-from guiproof.scorer import FactScore, FactScorer
+from clickproof.fact import UIFact
+from clickproof.report import print_fact, print_facts, to_json, to_markdown
+from clickproof.scorer import FactScore, FactScorer
 
 
 @pytest.fixture
@@ -86,11 +86,11 @@ class TestToJson:
 
 
 class TestToMarkdown:
-    def test_contains_guiproof_header(
+    def test_contains_clickproof_header(
         self, sample_pair: tuple[UIFact, FactScore]
     ) -> None:
         md = to_markdown([sample_pair])
-        assert "guiproof" in md
+        assert "clickproof" in md
 
     def test_contains_table(
         self, sample_pair: tuple[UIFact, FactScore]
@@ -112,7 +112,7 @@ class TestToMarkdown:
 
     def test_empty_list(self) -> None:
         md = to_markdown([])
-        assert "guiproof" in md
+        assert "clickproof" in md
         assert "0" in md
 
 

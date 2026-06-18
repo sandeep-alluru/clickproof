@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import time
 
-from guiproof.fact import FactObservation, UIFact
+from clickproof.fact import FactObservation, UIFact
 
 
 class TestUIFact:

@@ -19,9 +19,9 @@ jobs:
         with:
           python-version: "3.11"
       - run: pip install -e ".[dev,api]"
-      - run: ruff check guiproof/ tests/
-      - run: ruff format --check guiproof/ tests/
-      - run: mypy guiproof/ --ignore-missing-imports
+      - run: ruff check clickproof/ tests/
+      - run: ruff format --check clickproof/ tests/
+      - run: mypy clickproof/ --ignore-missing-imports
       - run: pytest tests/ -v --tb=short
 
   build:

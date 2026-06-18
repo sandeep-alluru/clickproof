@@ -6,8 +6,8 @@ import time
 
 import pytest
 
-from guiproof.fact import FactObservation, UIFact
-from guiproof.scorer import FactScorer
+from clickproof.fact import FactObservation, UIFact
+from clickproof.scorer import FactScorer
 
 
 @pytest.fixture
@@ -113,7 +113,7 @@ class TestFactScorer:
         assert "staleness_days" in d
 
     def test_batch_score_returns_all(self, scorer: FactScorer) -> None:
-        from guiproof.store import FactStore
+        from clickproof.store import FactStore
         with FactStore(":memory:") as store:
             facts = [
                 UIFact(app_name="app", app_version="1.0",

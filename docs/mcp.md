@@ -1,11 +1,11 @@
 # MCP / Claude Integration
 
-guiproof ships an MCP server that exposes its core operations as native Claude tools.
+clickproof ships an MCP server that exposes its core operations as native Claude tools.
 
 ## Install
 
 ```bash
-pip install "guiproof[mcp]"
+pip install "clickproof[mcp]"
 ```
 
 ## Add to Claude Desktop
@@ -16,8 +16,8 @@ Edit `~/.config/claude/claude_desktop_config.json` (Linux) or
 ```json
 {
   "mcpServers": {
-    "guiproof": {
-      "command": "guiproof-mcp"
+    "clickproof": {
+      "command": "clickproof-mcp"
     }
   }
 }
@@ -35,4 +35,4 @@ After cloning the repo, these project-level commands are available:
 
 ## Smithery
 
-guiproof is listed on [smithery.ai](https://smithery.ai) — search for "guiproof" to install with one click.
+clickproof is listed on [smithery.ai](https://smithery.ai) — search for "clickproof" to install with one click.

@@ -8,8 +8,8 @@ from pathlib import Path
 import pytest
 from click.testing import CliRunner
 
-from guiproof.cli import main
-from guiproof.store import FactStore
+from clickproof.cli import main
+from clickproof.store import FactStore
 
 
 @pytest.fixture

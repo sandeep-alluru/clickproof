@@ -2,9 +2,9 @@
 
 from __future__ import annotations
 
-from guiproof.fact import UIFact
-from guiproof.scorer import FactScore, FactScorer
-from guiproof.store import FactStore
+from clickproof.fact import UIFact
+from clickproof.scorer import FactScore, FactScorer
+from clickproof.store import FactStore
 
 
 class FactRetriever:
@@ -65,7 +65,7 @@ class FactRetriever:
             return f"No known UI facts for {app_name!r} (version: {app_version!r})."
 
         lines: list[str] = [
-            f"# guiproof: Known UI facts for {app_name!r} (version: {app_version!r})",
+            f"# clickproof: Known UI facts for {app_name!r} (version: {app_version!r})",
             f"# {len(pairs)} fact(s) retrieved, sorted by confidence\n",
         ]
 

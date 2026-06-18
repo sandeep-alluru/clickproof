@@ -1,4 +1,4 @@
-# guiproof
+# clickproof
 
 **Persistent GUI behavioral facts for computer-use agents**
 
@@ -10,14 +10,14 @@
 ## Install
 
 ```bash
-pip install guiproof
+pip install clickproof
 ```
 
 ## Quick example
 
 ```bash
 # TODO: add real usage example
-guiproof --help
+clickproof --help
 ```
 
 ## Why

@@ -1,11 +1,11 @@
 # Architecture
 
-guiproof is a pure-Python library. Persistent GUI behavioral facts for computer-use agents
+clickproof is a pure-Python library. Persistent GUI behavioral facts for computer-use agents
 
 ## Module map
 
 ```
-src/guiproof/
+src/clickproof/
 ├── # TODO: fill in
 ```
 

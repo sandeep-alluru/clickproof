@@ -1,16 +1,16 @@
-"""guiproof MCP server — Model Context Protocol tools for UI behavioral facts."""
+"""clickproof MCP server — Model Context Protocol tools for UI behavioral facts."""
 
 from __future__ import annotations
 
 import os
 import time
 
-from guiproof.fact import FactObservation, UIFact
-from guiproof.retriever import FactRetriever
-from guiproof.scorer import FactScorer
-from guiproof.store import FactStore
+from clickproof.fact import FactObservation, UIFact
+from clickproof.retriever import FactRetriever
+from clickproof.scorer import FactScorer
+from clickproof.store import FactStore
 
-_DEFAULT_DB = os.environ.get("GUIPROOF_DB", "guiproof.db")
+_DEFAULT_DB = os.environ.get("CLICKPROOF_DB", "clickproof.db")
 
 
 def _get_store() -> FactStore:
@@ -26,7 +26,7 @@ def add_ui_fact(
     context: str = "",
     confidence: float = 1.0,
 ) -> dict:
-    """Add a UIFact to the guiproof store.
+    """Add a UIFact to the clickproof store.
 
     Args:
         app_name: Application identifier, e.g. "salesforce".
@@ -91,7 +91,7 @@ def bootstrap_context(app_name: str, app_version: str = "unknown") -> str:
 
 
 def run_server() -> None:
-    """Run the guiproof MCP server (requires mcp package)."""
+    """Run the clickproof MCP server (requires mcp package)."""
     try:
         from mcp.server import Server  # type: ignore[import-untyped]
         from mcp.server.stdio import stdio_server  # type: ignore[import-untyped]
@@ -99,18 +99,18 @@ def run_server() -> None:
     except ImportError as exc:
         msg = (
             "The 'mcp' package is required to run the MCP server. "
-            "Install with: pip install 'guiproof[mcp]'"
+            "Install with: pip install 'clickproof[mcp]'"
         )
         raise ImportError(msg) from exc
 
-    server = Server("guiproof")
+    server = Server("clickproof")
 
     @server.list_tools()
     async def list_tools() -> list[Tool]:
         return [
             Tool(
                 name="add_ui_fact",
-                description="Add a UI behavioral fact to the guiproof store.",
+                description="Add a UI behavioral fact to the clickproof store.",
                 inputSchema={
                     "type": "object",
                     "properties": {

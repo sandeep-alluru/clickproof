@@ -1,4 +1,4 @@
-# guiproof — Agent Context
+# clickproof — Agent Context
 
 This file describes the project architecture for AI coding assistants (Claude Code, Cursor, Copilot).
 
@@ -9,7 +9,7 @@ Persistent GUI behavioral facts for computer-use agents
 ## Module map
 
 ```
-src/guiproof/
+src/clickproof/
 ├── # TODO: fill in module map
 ```
 

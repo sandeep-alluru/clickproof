@@ -1,4 +1,4 @@
-"""guiproof CLI — store, observe, and query UI behavioral facts."""
+"""clickproof CLI — store, observe, and query UI behavioral facts."""
 
 from __future__ import annotations
 
@@ -7,11 +7,11 @@ import time
 import click
 from rich.console import Console
 
-from guiproof.fact import FactObservation, UIFact
-from guiproof.report import print_facts, to_json
-from guiproof.retriever import FactRetriever
-from guiproof.scorer import FactScorer
-from guiproof.store import FactStore
+from clickproof.fact import FactObservation, UIFact
+from clickproof.report import print_facts, to_json
+from clickproof.retriever import FactRetriever
+from clickproof.scorer import FactScorer
+from clickproof.store import FactStore
 
 _console = Console()
 
@@ -19,15 +19,15 @@ _console = Console()
 @click.group()
 @click.option(
     "--db",
-    default="guiproof.db",
+    default="clickproof.db",
     show_default=True,
-    envvar="GUIPROOF_DB",
+    envvar="CLICKPROOF_DB",
     help="Path to the SQLite database file.",
 )
-@click.version_option(package_name="guiproof")
+@click.version_option(package_name="clickproof")
 @click.pass_context
 def main(ctx: click.Context, db: str) -> None:
-    """guiproof — persistent GUI behavioral facts for computer-use agents."""
+    """clickproof — persistent GUI behavioral facts for computer-use agents."""
     ctx.ensure_object(dict)
     ctx.obj["db"] = db
 
@@ -58,8 +58,8 @@ def add(
 
     \b
     Examples:
-      guiproof add salesforce 2025.11 export-csv-button click opens-download-dialog
-      guiproof add gmail unknown compose-button click opens-compose-window --context inbox
+      clickproof add salesforce 2025.11 export-csv-button click opens-download-dialog
+      clickproof add gmail unknown compose-button click opens-compose-window --context inbox
     """
     fact = UIFact(
         app_name=app,
@@ -92,8 +92,8 @@ def observe(ctx: click.Context, fact_id: str, confirmed: bool, run_id: str) -> N
 
     \b
     Examples:
-      guiproof observe abc123def456 --confirmed
-      guiproof observe abc123def456 --refuted --run-id run_20251101
+      clickproof observe abc123def456 --confirmed
+      clickproof observe abc123def456 --refuted --run-id run_20251101
     """
     obs = FactObservation(
         fact_id=fact_id,
@@ -129,9 +129,9 @@ def query(
 
     \b
     Examples:
-      guiproof query salesforce
-      guiproof query salesforce --version 2025.11 --min-score 0.7
-      guiproof query gmail --json
+      clickproof query salesforce
+      clickproof query salesforce --version 2025.11 --min-score 0.7
+      clickproof query gmail --json
     """
     with FactStore(ctx.obj["db"]) as store:
         retriever = FactRetriever(store, FactScorer())
@@ -158,9 +158,9 @@ def log_cmd(ctx: click.Context, app: str | None, as_json: bool) -> None:
 
     \b
     Examples:
-      guiproof log
-      guiproof log --app salesforce
-      guiproof log --json
+      clickproof log
+      clickproof log --app salesforce
+      clickproof log --json
     """
     with FactStore(ctx.obj["db"]) as store:
         facts = store.list_facts(app_name=app)
@@ -190,8 +190,8 @@ def status(ctx: click.Context) -> None:
 
     \b
     Examples:
-      guiproof status
-      guiproof --db /path/to/store.db status
+      clickproof status
+      clickproof --db /path/to/store.db status
     """
     db_path = ctx.obj["db"]
     with FactStore(db_path) as store:
@@ -199,7 +199,7 @@ def status(ctx: click.Context) -> None:
         total_obs = sum(len(store.get_observations(f.id)) for f in facts)
         apps: set[str] = {f.app_name for f in facts}
 
-    _console.print("[bold cyan]guiproof store status[/bold cyan]")
+    _console.print("[bold cyan]clickproof store status[/bold cyan]")
     _console.print(f"  database:      {db_path}")
     _console.print(f"  facts:         {len(facts)}")
     _console.print(f"  observations:  {total_obs}")

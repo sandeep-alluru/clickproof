@@ -1,4 +1,4 @@
-name: guiproof
+name: clickproof
 description: "Retrieve and surface persistent GUI behavioral facts for computer-use agents"
 inputs:
   app-name:
@@ -9,9 +9,9 @@ inputs:
     required: false
     default: "unknown"
   db:
-    description: "Path to the guiproof database"
+    description: "Path to the clickproof database"
     required: false
-    default: "guiproof.db"
+    default: "clickproof.db"
   min-score:
     description: "Minimum confidence score threshold"
     required: false
@@ -19,12 +19,12 @@ inputs:
 runs:
   using: "composite"
   steps:
-    - name: Install guiproof
+    - name: Install clickproof
       shell: bash
       run: pip install -e "${{ github.action_path }}"
     - name: Query UI behavioral facts
       shell: bash
       run: |
-        guiproof --db "${{ inputs.db }}" query "${{ inputs.app-name }}" \
+        clickproof --db "${{ inputs.db }}" query "${{ inputs.app-name }}" \
           --version "${{ inputs.app-version }}" \
           --min-score "${{ inputs.min-score }}"

@@ -1,5 +1,5 @@
 """
-End-to-end smoke test for guiproof.
+End-to-end smoke test for clickproof.
 
 Simulates a user who just cloned the repo and wants to verify everything works.
 No mocking, no fixtures — real behaviour, real CLI, real HTTP server.
@@ -67,16 +67,16 @@ def run(name: str, fn):  # noqa: ANN001
 section("1. Package import")
 
 def _test_import_version():
-    import guiproof
-    assert guiproof.__version__, "__version__ is empty"
-    assert guiproof.__version__ != "0.0.0"
+    import clickproof
+    assert clickproof.__version__, "__version__ is empty"
+    assert clickproof.__version__ != "0.0.0"
 
 def _test_import_public_api():
-    from guiproof import UIFact, FactObservation, FactScorer, FactStore, FactRetriever
+    from clickproof import UIFact, FactObservation, FactScorer, FactStore, FactRetriever
     assert callable(UIFact)
     assert callable(FactStore)
 
-run("guiproof package imports", _test_import_version)
+run("clickproof package imports", _test_import_version)
 run("Public API (UIFact, FactObservation, FactScorer, FactStore, FactRetriever)", _test_import_public_api)
 
 
@@ -85,7 +85,7 @@ run("Public API (UIFact, FactObservation, FactScorer, FactStore, FactRetriever)"
 section("2. UIFact content-addressing and FactScorer")
 
 def _test_uifact_content_addressed():
-    from guiproof.fact import UIFact
+    from clickproof.fact import UIFact
     f1 = UIFact(app_name="salesforce", app_version="2025.11",
                 element="export-csv-button", action="click", outcome="opens-download-dialog")
     f2 = UIFact(app_name="salesforce", app_version="2025.11",
@@ -97,7 +97,7 @@ def _test_uifact_content_addressed():
     assert f1.id == f3.id, "ID is content-addressed on app_name|app_version|element|action"
 
 def _test_uifact_serialization():
-    from guiproof.fact import UIFact
+    from clickproof.fact import UIFact
     f = UIFact(app_name="gmail", app_version="unknown",
                element="compose-button", action="click", outcome="opens-compose-window",
                context="inbox", confidence=0.9)
@@ -110,7 +110,7 @@ def _test_uifact_serialization():
     assert f2.outcome == f.outcome
 
 def _test_factobservation_round_trip():
-    from guiproof.fact import FactObservation
+    from clickproof.fact import FactObservation
     obs = FactObservation(fact_id="abc123", observed_at=1700000000.0, confirmed=True)
     d = obs.to_dict()
     assert d["confirmed"] is True
@@ -118,8 +118,8 @@ def _test_factobservation_round_trip():
     assert obs2.id == obs.id
 
 def _test_factscorer_no_observations():
-    from guiproof.fact import UIFact
-    from guiproof.scorer import FactScorer
+    from clickproof.fact import UIFact
+    from clickproof.scorer import FactScorer
     fact = UIFact(app_name="app", app_version="1.0",
                   element="button", action="click", outcome="ok", confidence=0.8)
     scorer = FactScorer()
@@ -128,8 +128,8 @@ def _test_factscorer_no_observations():
     assert fs.observation_count == 0
 
 def _test_factscorer_with_confirmations():
-    from guiproof.fact import UIFact, FactObservation
-    from guiproof.scorer import FactScorer
+    from clickproof.fact import UIFact, FactObservation
+    from clickproof.scorer import FactScorer
     import time as _time
     fact = UIFact(app_name="app", app_version="1.0",
                   element="button", action="click", outcome="ok")
@@ -145,9 +145,9 @@ def _test_factscorer_with_confirmations():
     assert fs.confirmed_count == 3
 
 def _test_factretriever_query():
-    from guiproof.fact import UIFact
-    from guiproof.store import FactStore
-    from guiproof.retriever import FactRetriever
+    from clickproof.fact import UIFact
+    from clickproof.store import FactStore
+    from clickproof.retriever import FactRetriever
     with tempfile.TemporaryDirectory() as tmp:
         with FactStore(f"{tmp}/test.db") as store:
             f1 = UIFact(app_name="salesforce", app_version="2025.11",
@@ -176,9 +176,9 @@ run("FactRetriever.query() filters by app_name", _test_factretriever_query)
 section("3. Observations update scores")
 
 def _test_refuted_observations_lower_score():
-    from guiproof.fact import UIFact, FactObservation
-    from guiproof.store import FactStore
-    from guiproof.scorer import FactScorer
+    from clickproof.fact import UIFact, FactObservation
+    from clickproof.store import FactStore
+    from clickproof.scorer import FactScorer
     import time as _time
     with tempfile.TemporaryDirectory() as tmp:
         with FactStore(f"{tmp}/test.db") as store:
@@ -196,9 +196,9 @@ def _test_refuted_observations_lower_score():
             assert fs.score < 0.3, f"Refuted fact should have low score, got {fs.score}"
 
 def _test_mixed_observations():
-    from guiproof.fact import UIFact, FactObservation
-    from guiproof.store import FactStore
-    from guiproof.scorer import FactScorer
+    from clickproof.fact import UIFact, FactObservation
+    from clickproof.store import FactStore
+    from clickproof.scorer import FactScorer
     import time as _time
     with tempfile.TemporaryDirectory() as tmp:
         with FactStore(f"{tmp}/test.db") as store:
@@ -216,9 +216,9 @@ def _test_mixed_observations():
             assert 0.0 < fs.score < 1.0
 
 def _test_bootstrap_context_text():
-    from guiproof.fact import UIFact
-    from guiproof.store import FactStore
-    from guiproof.retriever import FactRetriever
+    from clickproof.fact import UIFact
+    from clickproof.store import FactStore
+    from clickproof.retriever import FactRetriever
     with tempfile.TemporaryDirectory() as tmp:
         with FactStore(f"{tmp}/test.db") as store:
             fact = UIFact(app_name="salesforce", app_version="2025.11",
@@ -240,10 +240,10 @@ run("bootstrap_context() returns text with app name and facts", _test_bootstrap_
 section("4. Report formatters")
 
 def _test_to_json():
-    from guiproof.fact import UIFact
-    from guiproof.scorer import FactScorer
-    from guiproof.report import to_json
-    from guiproof.store import FactStore
+    from clickproof.fact import UIFact
+    from clickproof.scorer import FactScorer
+    from clickproof.report import to_json
+    from clickproof.store import FactStore
     with tempfile.TemporaryDirectory() as tmp:
         with FactStore(f"{tmp}/test.db") as store:
             fact = UIFact(app_name="app", app_version="1.0",
@@ -258,24 +258,24 @@ def _test_to_json():
     assert parsed["facts"][0]["fact"]["app_name"] == "app"
 
 def _test_to_markdown():
-    from guiproof.fact import UIFact
-    from guiproof.scorer import FactScorer
-    from guiproof.report import to_markdown
+    from clickproof.fact import UIFact
+    from clickproof.scorer import FactScorer
+    from clickproof.report import to_markdown
     fact = UIFact(app_name="app", app_version="1.0",
                   element="btn", action="click", outcome="ok")
     scorer = FactScorer()
     fs = scorer.score(fact, [])
     md = to_markdown([(fact, fs)])
-    assert "guiproof" in md
+    assert "clickproof" in md
     assert "|" in md
     assert "app" in md
 
 def _test_print_facts():
     import io
     from rich.console import Console
-    from guiproof.fact import UIFact
-    from guiproof.scorer import FactScorer
-    from guiproof.report import print_facts
+    from clickproof.fact import UIFact
+    from clickproof.scorer import FactScorer
+    from clickproof.report import print_facts
     fact = UIFact(app_name="app", app_version="1.0",
                   element="btn", action="click", outcome="ok")
     scorer = FactScorer()
@@ -293,29 +293,29 @@ run("print_facts() outputs facts to Rich console", _test_print_facts)
 
 # ── 5. CLI ────────────────────────────────────────────────────────────────────
 
-section("5. CLI (guiproof)")
+section("5. CLI (clickproof)")
 
 def _test_cli_help():
     r = subprocess.run(
-        [PYTHON, "-m", "guiproof.cli", "--help"],
+        [PYTHON, "-m", "clickproof.cli", "--help"],
         capture_output=True, text=True
     )
     assert r.returncode == 0
     assert len(r.stdout) > 20, "Help output is empty"
 
-run("guiproof --help returns 0", _test_cli_help)
+run("clickproof --help returns 0", _test_cli_help)
 
 def _test_cli_add_and_query():
     with tempfile.TemporaryDirectory() as tmp:
         db = f"{tmp}/test.db"
         r = subprocess.run(
-            [PYTHON, "-m", "guiproof.cli", "--db", db,
+            [PYTHON, "-m", "clickproof.cli", "--db", db,
              "add", "salesforce", "2025.11", "export-csv-button", "click", "opens-download-dialog"],
             capture_output=True, text=True,
         )
         assert r.returncode == 0, f"add failed: {r.stderr}"
         r2 = subprocess.run(
-            [PYTHON, "-m", "guiproof.cli", "--db", db, "query", "salesforce", "--min-score", "0.0"],
+            [PYTHON, "-m", "clickproof.cli", "--db", db, "query", "salesforce", "--min-score", "0.0"],
             capture_output=True, text=True,
         )
         assert r2.returncode == 0, f"query failed: {r2.stderr}"
@@ -324,26 +324,26 @@ def _test_cli_status():
     with tempfile.TemporaryDirectory() as tmp:
         db = f"{tmp}/test.db"
         r = subprocess.run(
-            [PYTHON, "-m", "guiproof.cli", "--db", db, "status"],
+            [PYTHON, "-m", "clickproof.cli", "--db", db, "status"],
             capture_output=True, text=True,
         )
         assert r.returncode == 0, f"status failed: {r.stderr}"
 
-run("guiproof add + query workflow", _test_cli_add_and_query)
-run("guiproof status returns 0", _test_cli_status)
+run("clickproof add + query workflow", _test_cli_add_and_query)
+run("clickproof status returns 0", _test_cli_status)
 
 
 # ── 6. FastAPI server ─────────────────────────────────────────────────────────
 
-section("6. FastAPI server (guiproof[api])")
+section("6. FastAPI server (clickproof[api])")
 
 def _test_api_import():
-    from guiproof.api import app
-    assert app.title == "guiproof API"
+    from clickproof.api import app
+    assert app.title == "clickproof API"
 
 def _test_api_health():
     from fastapi.testclient import TestClient
-    from guiproof.api import app
+    from clickproof.api import app
     client = TestClient(app)
     r = client.get("/health")
     assert r.status_code == 200
@@ -352,7 +352,7 @@ def _test_api_health():
 
 def _test_api_fact_and_query():
     from fastapi.testclient import TestClient
-    from guiproof.api import app
+    from clickproof.api import app
     client = TestClient(app)
     with tempfile.TemporaryDirectory() as tmp:
         db = f"{tmp}/test.db"
@@ -369,21 +369,21 @@ def _test_api_fact_and_query():
         data = r2.json()
         assert len(data) == 1
 
-run("guiproof.api imports and app.title is correct", _test_api_import)
+run("clickproof.api imports and app.title is correct", _test_api_import)
 run("GET /health returns {status: ok, version: ...}", _test_api_health)
 run("POST /fact + GET /query workflow", _test_api_fact_and_query)
 
 
 # ── 7. MCP server ─────────────────────────────────────────────────────────────
 
-section("7. MCP server (guiproof[mcp])")
+section("7. MCP server (clickproof[mcp])")
 
 def _test_mcp_server_importable():
-    import guiproof.mcp_server as m  # noqa: F401
+    import clickproof.mcp_server as m  # noqa: F401
     assert hasattr(m, "run_server")
 
 def _test_mcp_server_loads_cleanly():
-    import guiproof.mcp_server  # noqa: F401
+    import clickproof.mcp_server  # noqa: F401
 
 run("mcp_server.py imports without error", _test_mcp_server_importable)
 run("mcp_server module loads cleanly (no import-time crash)", _test_mcp_server_loads_cleanly)
@@ -496,7 +496,7 @@ if failed:
         print(f"    {YELLOW}→ {short}{RESET}")
     print(f"\n{YELLOW}Tip: run with --verbose for full tracebacks{RESET}")
 else:
-    print(f"{GREEN}All {total} checks passed — guiproof is ready to ship{RESET}")
+    print(f"{GREEN}All {total} checks passed — clickproof is ready to ship{RESET}")
 
 print(f"{'═'*60}\n")
 sys.exit(0 if not failed else 1)

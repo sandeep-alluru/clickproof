@@ -3,14 +3,14 @@
 ## Top-level exports
 
 ```python
-import guiproof
+import clickproof
 ```
 
 <!-- mkdocstrings will auto-generate from docstrings below -->
 
-::: guiproof
+::: clickproof
 
 <!-- TODO: add per-module sections as you implement them:
-::: guiproof.core
-::: guiproof.cli
+::: clickproof.core
+::: clickproof.cli
 -->

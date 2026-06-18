@@ -1,4 +1,4 @@
-"""guiproof demo — end-to-end walkthrough of all core features.
+"""clickproof demo — end-to-end walkthrough of all core features.
 
 Run from repo root:
     python examples/demo.py
@@ -9,14 +9,14 @@ from __future__ import annotations
 import tempfile
 import time
 
-from guiproof.fact import FactObservation, UIFact
-from guiproof.report import print_facts, to_json, to_markdown
-from guiproof.retriever import FactRetriever
-from guiproof.scorer import FactScorer
-from guiproof.store import FactStore
+from clickproof.fact import FactObservation, UIFact
+from clickproof.report import print_facts, to_json, to_markdown
+from clickproof.retriever import FactRetriever
+from clickproof.scorer import FactScorer
+from clickproof.store import FactStore
 
 print("=" * 60)
-print("guiproof demo")
+print("clickproof demo")
 print("=" * 60)
 
 # ── 1. Create a temporary store ───────────────────────────────────────────────
