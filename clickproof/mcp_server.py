@@ -5,6 +5,7 @@ from __future__ import annotations
 import json
 import os
 import time
+from typing import Any
 
 from clickproof.fact import FactObservation, UIFact
 from clickproof.retriever import FactRetriever
@@ -274,22 +275,22 @@ def run_server() -> None:
         ]
 
     @server.call_tool()
-    async def call_tool(name: str, arguments: dict) -> list[TextContent]:
+    async def call_tool(name: str, arguments: dict[str, Any]) -> list[TextContent]:
 
         if name == "add_ui_fact":
-            result = add_ui_fact(**arguments)
+            result: Any = add_ui_fact(**arguments)
         elif name == "query_facts":
-            result = query_facts(**arguments)  # type: ignore[assignment]
+            result = query_facts(**arguments)
         elif name == "bootstrap_context":
-            result = bootstrap_context(**arguments)  # type: ignore[assignment]
+            result = bootstrap_context(**arguments)
         elif name == "clickproof_add_fact":
             result = clickproof_add_fact(**arguments)
         elif name == "clickproof_observe":
             result = clickproof_observe(**arguments)
         elif name == "clickproof_query":
-            result = clickproof_query(**arguments)  # type: ignore[assignment]
+            result = clickproof_query(**arguments)
         elif name == "clickproof_bootstrap":
-            result = clickproof_bootstrap(**arguments)  # type: ignore[assignment]
+            result = clickproof_bootstrap(**arguments)
         else:
             result = {"error": f"Unknown tool: {name}"}
 

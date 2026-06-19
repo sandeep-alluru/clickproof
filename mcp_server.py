@@ -3,9 +3,8 @@
 from __future__ import annotations
 
 import os
-import time
 
-from clickproof.fact import FactObservation, UIFact
+from clickproof.fact import UIFact
 from clickproof.retriever import FactRetriever
 from clickproof.scorer import FactScorer
 from clickproof.store import FactStore

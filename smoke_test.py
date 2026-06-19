@@ -13,7 +13,6 @@ Exit 0 = all passed. Exit 1 = at least one failure.
 
 from __future__ import annotations
 
-import importlib
 import json
 import subprocess
 import sys
@@ -53,7 +52,7 @@ def section(title: str) -> None:
     print(f"\n{BOLD}{title}{RESET}")
 
 
-def run(name: str, fn):  # noqa: ANN001
+def run(name: str, fn):
     try:
         fn()
         ok(name)
@@ -72,7 +71,7 @@ def _test_import_version():
     assert clickproof.__version__ != "0.0.0"
 
 def _test_import_public_api():
-    from clickproof import UIFact, FactObservation, FactScorer, FactStore, FactRetriever
+    from clickproof import FactStore, UIFact
     assert callable(UIFact)
     assert callable(FactStore)
 
@@ -128,9 +127,10 @@ def _test_factscorer_no_observations():
     assert fs.observation_count == 0
 
 def _test_factscorer_with_confirmations():
-    from clickproof.fact import UIFact, FactObservation
-    from clickproof.scorer import FactScorer
     import time as _time
+
+    from clickproof.fact import FactObservation, UIFact
+    from clickproof.scorer import FactScorer
     fact = UIFact(app_name="app", app_version="1.0",
                   element="button", action="click", outcome="ok")
     now = _time.time()
@@ -146,22 +146,21 @@ def _test_factscorer_with_confirmations():
 
 def _test_factretriever_query():
     from clickproof.fact import UIFact
-    from clickproof.store import FactStore
     from clickproof.retriever import FactRetriever
-    with tempfile.TemporaryDirectory() as tmp:
-        with FactStore(f"{tmp}/test.db") as store:
-            f1 = UIFact(app_name="salesforce", app_version="2025.11",
-                        element="export-csv-button", action="click",
-                        outcome="opens-download-dialog")
-            f2 = UIFact(app_name="gmail", app_version="unknown",
-                        element="compose-button", action="click",
-                        outcome="opens-compose-window")
-            store.add_fact(f1)
-            store.add_fact(f2)
-            retriever = FactRetriever(store)
-            pairs = retriever.query(app_name="salesforce", min_score=0.0)
-            assert len(pairs) == 1
-            assert pairs[0][0].app_name == "salesforce"
+    from clickproof.store import FactStore
+    with tempfile.TemporaryDirectory() as tmp, FactStore(f"{tmp}/test.db") as store:
+        f1 = UIFact(app_name="salesforce", app_version="2025.11",
+                    element="export-csv-button", action="click",
+                    outcome="opens-download-dialog")
+        f2 = UIFact(app_name="gmail", app_version="unknown",
+                    element="compose-button", action="click",
+                    outcome="opens-compose-window")
+        store.add_fact(f1)
+        store.add_fact(f2)
+        retriever = FactRetriever(store)
+        pairs = retriever.query(app_name="salesforce", min_score=0.0)
+        assert len(pairs) == 1
+        assert pairs[0][0].app_name == "salesforce"
 
 run("UIFact.id is content-addressed (app_name|app_version|element|action)", _test_uifact_content_addressed)
 run("UIFact.to_dict() / from_dict() round-trip preserves all fields", _test_uifact_serialization)
@@ -176,59 +175,58 @@ run("FactRetriever.query() filters by app_name", _test_factretriever_query)
 section("3. Observations update scores")
 
 def _test_refuted_observations_lower_score():
-    from clickproof.fact import UIFact, FactObservation
-    from clickproof.store import FactStore
-    from clickproof.scorer import FactScorer
     import time as _time
-    with tempfile.TemporaryDirectory() as tmp:
-        with FactStore(f"{tmp}/test.db") as store:
-            fact = UIFact(app_name="app", app_version="1.0",
-                          element="btn", action="click", outcome="ok")
-            store.add_fact(fact)
-            now = _time.time()
-            # Add refuting observations
-            for i in range(3):
-                obs = FactObservation(fact_id=fact.id, observed_at=now - i, confirmed=False)
-                store.add_observation(obs)
-            scorer = FactScorer()
-            observations = store.get_observations(fact.id)
-            fs = scorer.score(fact, observations)
-            assert fs.score < 0.3, f"Refuted fact should have low score, got {fs.score}"
+
+    from clickproof.fact import FactObservation, UIFact
+    from clickproof.scorer import FactScorer
+    from clickproof.store import FactStore
+    with tempfile.TemporaryDirectory() as tmp, FactStore(f"{tmp}/test.db") as store:
+        fact = UIFact(app_name="app", app_version="1.0",
+                      element="btn", action="click", outcome="ok")
+        store.add_fact(fact)
+        now = _time.time()
+        # Add refuting observations
+        for i in range(3):
+            obs = FactObservation(fact_id=fact.id, observed_at=now - i, confirmed=False)
+            store.add_observation(obs)
+        scorer = FactScorer()
+        observations = store.get_observations(fact.id)
+        fs = scorer.score(fact, observations)
+        assert fs.score < 0.3, f"Refuted fact should have low score, got {fs.score}"
 
 def _test_mixed_observations():
-    from clickproof.fact import UIFact, FactObservation
-    from clickproof.store import FactStore
-    from clickproof.scorer import FactScorer
     import time as _time
-    with tempfile.TemporaryDirectory() as tmp:
-        with FactStore(f"{tmp}/test.db") as store:
-            fact = UIFact(app_name="app", app_version="1.0",
-                          element="btn", action="click", outcome="ok")
-            store.add_fact(fact)
-            now = _time.time()
-            for i in range(5):
-                confirmed = i % 2 == 0  # alternate
-                obs = FactObservation(fact_id=fact.id, observed_at=now - i, confirmed=confirmed)
-                store.add_observation(obs)
-            scorer = FactScorer()
-            observations = store.get_observations(fact.id)
-            fs = scorer.score(fact, observations)
-            assert 0.0 < fs.score < 1.0
+
+    from clickproof.fact import FactObservation, UIFact
+    from clickproof.scorer import FactScorer
+    from clickproof.store import FactStore
+    with tempfile.TemporaryDirectory() as tmp, FactStore(f"{tmp}/test.db") as store:
+        fact = UIFact(app_name="app", app_version="1.0",
+                      element="btn", action="click", outcome="ok")
+        store.add_fact(fact)
+        now = _time.time()
+        for i in range(5):
+            confirmed = i % 2 == 0  # alternate
+            obs = FactObservation(fact_id=fact.id, observed_at=now - i, confirmed=confirmed)
+            store.add_observation(obs)
+        scorer = FactScorer()
+        observations = store.get_observations(fact.id)
+        fs = scorer.score(fact, observations)
+        assert 0.0 < fs.score < 1.0
 
 def _test_bootstrap_context_text():
     from clickproof.fact import UIFact
-    from clickproof.store import FactStore
     from clickproof.retriever import FactRetriever
-    with tempfile.TemporaryDirectory() as tmp:
-        with FactStore(f"{tmp}/test.db") as store:
-            fact = UIFact(app_name="salesforce", app_version="2025.11",
-                          element="export-csv-button", action="click",
-                          outcome="opens-download-dialog")
-            store.add_fact(fact)
-            retriever = FactRetriever(store)
-            ctx = retriever.bootstrap_context("salesforce", "2025.11")
-            assert "salesforce" in ctx
-            assert "export-csv-button" in ctx
+    from clickproof.store import FactStore
+    with tempfile.TemporaryDirectory() as tmp, FactStore(f"{tmp}/test.db") as store:
+        fact = UIFact(app_name="salesforce", app_version="2025.11",
+                      element="export-csv-button", action="click",
+                      outcome="opens-download-dialog")
+        store.add_fact(fact)
+        retriever = FactRetriever(store)
+        ctx = retriever.bootstrap_context("salesforce", "2025.11")
+        assert "salesforce" in ctx
+        assert "export-csv-button" in ctx
 
 run("Refuted observations lower the score significantly", _test_refuted_observations_lower_score)
 run("Mixed observations produce intermediate score", _test_mixed_observations)
@@ -241,17 +239,16 @@ section("4. Report formatters")
 
 def _test_to_json():
     from clickproof.fact import UIFact
-    from clickproof.scorer import FactScorer
     from clickproof.report import to_json
+    from clickproof.scorer import FactScorer
     from clickproof.store import FactStore
-    with tempfile.TemporaryDirectory() as tmp:
-        with FactStore(f"{tmp}/test.db") as store:
-            fact = UIFact(app_name="app", app_version="1.0",
-                          element="btn", action="click", outcome="ok")
-            store.add_fact(fact)
-            scorer = FactScorer()
-            fs = scorer.score(fact, [])
-            pairs = [(fact, fs)]
+    with tempfile.TemporaryDirectory() as tmp, FactStore(f"{tmp}/test.db") as store:
+        fact = UIFact(app_name="app", app_version="1.0",
+                      element="btn", action="click", outcome="ok")
+        store.add_fact(fact)
+        scorer = FactScorer()
+        fs = scorer.score(fact, [])
+        pairs = [(fact, fs)]
     parsed = json.loads(to_json(pairs))
     assert parsed["count"] == 1
     assert "facts" in parsed
@@ -259,8 +256,8 @@ def _test_to_json():
 
 def _test_to_markdown():
     from clickproof.fact import UIFact
-    from clickproof.scorer import FactScorer
     from clickproof.report import to_markdown
+    from clickproof.scorer import FactScorer
     fact = UIFact(app_name="app", app_version="1.0",
                   element="btn", action="click", outcome="ok")
     scorer = FactScorer()
@@ -272,10 +269,12 @@ def _test_to_markdown():
 
 def _test_print_facts():
     import io
+
     from rich.console import Console
+
     from clickproof.fact import UIFact
-    from clickproof.scorer import FactScorer
     from clickproof.report import print_facts
+    from clickproof.scorer import FactScorer
     fact = UIFact(app_name="app", app_version="1.0",
                   element="btn", action="click", outcome="ok")
     scorer = FactScorer()
@@ -343,6 +342,7 @@ def _test_api_import():
 
 def _test_api_health():
     from fastapi.testclient import TestClient
+
     from clickproof.api import app
     client = TestClient(app)
     r = client.get("/health")
@@ -352,6 +352,7 @@ def _test_api_health():
 
 def _test_api_fact_and_query():
     from fastapi.testclient import TestClient
+
     from clickproof.api import app
     client = TestClient(app)
     with tempfile.TemporaryDirectory() as tmp:
@@ -379,7 +380,7 @@ run("POST /fact + GET /query workflow", _test_api_fact_and_query)
 section("7. MCP server (clickproof[mcp])")
 
 def _test_mcp_server_importable():
-    import clickproof.mcp_server as m  # noqa: F401
+    import clickproof.mcp_server as m
     assert hasattr(m, "run_server")
 
 def _test_mcp_server_loads_cleanly():
@@ -432,7 +433,7 @@ run("CODEX.md exists and non-empty", lambda: _check_file_nonempty("CODEX.md"))
 run(".github/copilot-instructions.md exists", lambda: _check_file_nonempty(".github/copilot-instructions.md"))
 def _test_cursor_rules():
     mdc_files = list((REPO_ROOT / ".cursor/rules").glob("*.mdc"))
-    assert len(mdc_files) >= 1, f"Expected ≥1 .mdc file in .cursor/rules/, found none"
+    assert len(mdc_files) >= 1, "Expected ≥1 .mdc file in .cursor/rules/, found none"
 
 run(".cursor/rules/ has at least one .mdc file", _test_cursor_rules)
 run(".windsurfrules exists", lambda: _check_file_nonempty(".windsurfrules"))

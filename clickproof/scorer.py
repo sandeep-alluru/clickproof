@@ -54,6 +54,15 @@ class FactScore:
         }
 
 
+def _count_boost(count: int) -> float:
+    """Compute the observation-count boost factor.
+
+    Returns a value in [0.5, 1.0] that grows logarithmically with *count*.
+    Ten or more confirming observations saturates the boost at 1.0.
+    """
+    return min(1.0, 0.5 + 0.5 * math.log(1 + count) / math.log(11))
+
+
 class FactScorer:
     """Computes confidence scores from observation history.
 
@@ -61,7 +70,7 @@ class FactScorer:
         1. Base: ratio of confirmed / total observations (uses initial confidence if no obs).
         2. Decay: multiply by staleness factor: e^(-0.1 * staleness_days).
         3. Boost: scale up with observation count (more observations = more confident).
-           Final score = base_ratio * staleness_decay * min(1.0, log(1 + count) / log(11))
+           Final score = base_ratio * staleness_decay * _count_boost(count)
     """
 
     def score(self, fact: UIFact, observations: list[FactObservation]) -> FactScore:
@@ -92,7 +101,7 @@ class FactScorer:
         base_ratio = confirmed_count / count
         staleness_days = (now - last_observed) / 86400.0
         staleness_decay = math.exp(-0.1 * staleness_days)
-        count_boost = min(1.0, 0.5 + 0.5 * math.log(1 + count) / math.log(11))
+        count_boost = _count_boost(count)
 
         score = base_ratio * staleness_decay * count_boost
 

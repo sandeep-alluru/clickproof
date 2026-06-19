@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import time
-from pathlib import Path
 
 from fastapi import FastAPI, HTTPException, Query
 from pydantic import BaseModel
@@ -11,7 +10,7 @@ from pydantic import BaseModel
 import clickproof
 from clickproof.fact import FactObservation, UIFact
 from clickproof.retriever import FactRetriever
-from clickproof.scorer import FactScore, FactScorer
+from clickproof.scorer import FactScorer
 from clickproof.store import FactStore
 
 app = FastAPI(

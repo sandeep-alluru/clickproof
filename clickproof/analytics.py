@@ -6,7 +6,7 @@ import math
 from dataclasses import dataclass
 
 from clickproof.fact import UIFact
-from clickproof.scorer import FactScorer
+from clickproof.scorer import FactScorer, _count_boost
 from clickproof.store import FactStore
 
 
@@ -85,7 +85,7 @@ def project_decay(
         else:
             confirmed_count = fact_score.confirmed_count
             base_ratio = confirmed_count / count
-            count_boost = min(1.0, 0.5 + 0.5 * math.log(1 + count) / math.log(11))
+            count_boost = _count_boost(count)
 
         score_in_7_days = max(
             0.0, _project_score(base_ratio, count_boost, staleness_days, 7.0)
