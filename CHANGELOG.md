@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- `bulk.py`: `export_facts()`, `import_facts()`, `export_bootstrap_pack()` for cross-deployment fact sharing
+- `analytics.py`: `DecayProjection`, `project_decay()`, `stale_facts()` for score decay projection
+- MCP server tools: `clickproof_add_fact`, `clickproof_observe`, `clickproof_query`, `clickproof_bootstrap`
+- CLI commands: `clickproof export <app>` and `clickproof decay <app>`
+
 ## [0.1.0] - 2026-06-18
 
 ### Added

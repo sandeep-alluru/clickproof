@@ -2,11 +2,15 @@
 
 from __future__ import annotations
 
+import json
 import time
 
 import click
 from rich.console import Console
+from rich.table import Table
 
+from clickproof.analytics import project_decay
+from clickproof.bulk import export_bootstrap_pack, export_facts
 from clickproof.fact import FactObservation, UIFact
 from clickproof.report import print_facts, to_json
 from clickproof.retriever import FactRetriever
@@ -206,6 +210,126 @@ def status(ctx: click.Context) -> None:
     _console.print(f"  applications:  {len(apps)}")
     if apps:
         _console.print(f"  app list:      {', '.join(sorted(apps))}")
+
+
+# ── export ────────────────────────────────────────────────────────────────────
+
+
+@main.command("export")
+@click.argument("app")
+@click.option("--output", "-o", default="-", help="Output file (default: stdout).")
+@click.option(
+    "--bootstrap",
+    is_flag=True,
+    default=False,
+    help="Export bootstrap pack only (top-scored facts, no observations).",
+)
+@click.pass_context
+def export_cmd(ctx: click.Context, app: str, output: str, bootstrap: bool) -> None:
+    """Export facts for an app as JSON.
+
+    \b
+    Examples:
+      clickproof export salesforce
+      clickproof export salesforce --bootstrap
+      clickproof export salesforce -o salesforce_facts.json
+    """
+    with FactStore(ctx.obj["db"]) as store:
+        if bootstrap:
+            payload = export_bootstrap_pack(store, app_name=app)
+        else:
+            payload = export_facts(store, app_name=app)
+
+    if output == "-":
+        click.echo(payload)
+    else:
+        with open(output, "w") as fh:
+            fh.write(payload)
+        _console.print(f"[green]✓[/green] Exported to {output}")
+
+
+# ── decay ─────────────────────────────────────────────────────────────────────
+
+
+@main.command("decay")
+@click.argument("app")
+@click.option(
+    "--min-score",
+    type=float,
+    default=0.5,
+    show_default=True,
+    help="Score threshold for recommendations.",
+)
+@click.option(
+    "--format",
+    "fmt",
+    type=click.Choice(["rich", "json"]),
+    default="rich",
+    show_default=True,
+    help="Output format.",
+)
+@click.pass_context
+def decay_cmd(ctx: click.Context, app: str, min_score: float, fmt: str) -> None:
+    """Show decay projections for facts in an app.
+
+    \b
+    Examples:
+      clickproof decay salesforce
+      clickproof decay salesforce --min-score 0.6 --format json
+    """
+    with FactStore(ctx.obj["db"]) as store:
+        projections = project_decay(store, FactScorer(), app_name=app, min_score=min_score)
+
+    if not projections:
+        if fmt == "json":
+            click.echo("[]")
+        else:
+            _console.print(f"[yellow]No facts found for {app!r}.[/yellow]")
+        return
+
+    if fmt == "json":
+        rows = [
+            {
+                "fact_id": p.fact_id,
+                "element": p.element,
+                "current_score": p.current_score,
+                "score_in_7_days": p.score_in_7_days,
+                "score_in_30_days": p.score_in_30_days,
+                "days_until_threshold": p.days_until_threshold,
+                "recommendation": p.recommendation,
+            }
+            for p in projections
+        ]
+        click.echo(json.dumps(rows, indent=2))
+    else:
+        table = Table(
+            title=f"Decay Projections — {app}",
+            show_header=True,
+            header_style="bold cyan",
+        )
+        table.add_column("Element", style="white")
+        table.add_column("Score now", justify="right", style="bold green")
+        table.add_column("7d", justify="right")
+        table.add_column("30d", justify="right")
+        table.add_column("Days until threshold", justify="right")
+        table.add_column("Recommendation", style="yellow")
+
+        for p in projections:
+            color = (
+                "green"
+                if p.recommendation == "ok"
+                else ("yellow" if p.recommendation == "re-validate" else "red")
+            )
+            table.add_row(
+                p.element,
+                f"{p.current_score:.3f}",
+                f"{p.score_in_7_days:.3f}",
+                f"{p.score_in_30_days:.3f}",
+                f"{p.days_until_threshold:.1f}",
+                f"[{color}]{p.recommendation}[/{color}]",
+            )
+
+        _console.print(table)
 
 
 if __name__ == "__main__":
