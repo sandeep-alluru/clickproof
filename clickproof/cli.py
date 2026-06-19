@@ -12,7 +12,7 @@ from rich.table import Table
 from clickproof.analytics import project_decay
 from clickproof.bulk import export_bootstrap_pack, export_facts
 from clickproof.fact import FactObservation, UIFact
-from clickproof.report import print_facts, to_json
+from clickproof.report import print_facts, to_json, to_markdown
 from clickproof.retriever import FactRetriever
 from clickproof.scorer import FactScorer
 from clickproof.store import FactStore
@@ -125,9 +125,22 @@ def observe(ctx: click.Context, fact_id: str, confirmed: bool, run_id: str) -> N
     "--min-score", default=0.5, show_default=True, help="Minimum confidence score threshold."
 )
 @click.option("--json", "as_json", is_flag=True, help="Output as JSON.")
+@click.option(
+    "--format",
+    "fmt",
+    type=click.Choice(["rich", "json", "markdown"]),
+    default="rich",
+    show_default=True,
+    help="Output format (rich table, JSON, or Markdown).",
+)
 @click.pass_context
 def query(
-    ctx: click.Context, app: str, version: str | None, min_score: float, as_json: bool
+    ctx: click.Context,
+    app: str,
+    version: str | None,
+    min_score: float,
+    as_json: bool,
+    fmt: str,
 ) -> None:
     """Retrieve facts for an app, sorted by confidence score.
 
@@ -136,13 +149,20 @@ def query(
       clickproof query salesforce
       clickproof query salesforce --version 2025.11 --min-score 0.7
       clickproof query gmail --json
+      clickproof query gmail --format markdown
     """
     with FactStore(ctx.obj["db"]) as store:
         retriever = FactRetriever(store, FactScorer())
         pairs = retriever.query(app_name=app, app_version=version, min_score=min_score)
 
+    # --json flag is a legacy alias for --format json
     if as_json:
+        fmt = "json"
+
+    if fmt == "json":
         click.echo(to_json(pairs))
+    elif fmt == "markdown":
+        click.echo(to_markdown(pairs))
     else:
         if not pairs:
             _console.print(f"[yellow]No facts found for {app!r} (min_score={min_score}).[/yellow]")

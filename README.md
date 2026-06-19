@@ -64,7 +64,7 @@ flowchart LR
 | Markdown output | Ready-to-paste format for issue comments and PRs |
 | FastAPI REST server | `/fact`, `/observe`, `/query`, `/facts`, `/bootstrap`, `/health` endpoints |
 | MCP server | Model Context Protocol tools for Claude and other MCP-compatible agents |
-| 109 tests | Comprehensive suite covering all layers with 87%+ branch coverage |
+| 166 tests | Comprehensive suite covering all layers with 87%+ branch coverage |
 
 ---
 
@@ -72,6 +72,17 @@ flowchart LR
 
 ```bash
 pip install clickproof
+```
+
+### Extras / Optional Dependencies
+
+```bash
+# FastAPI REST server (5 endpoints: /fact /observe /query /facts /bootstrap /health)
+pip install 'clickproof[api]'
+uvicorn clickproof.api:app --reload
+
+# MCP server for Claude Desktop and other MCP-compatible agents
+pip install 'clickproof[mcp]'
 ```
 
 ```python
@@ -120,9 +131,11 @@ clickproof [--db PATH] COMMAND [ARGS]
 Commands:
   add     APP VERSION ELEMENT ACTION OUTCOME  Stage a UIFact
   observe FACT_ID --confirmed/--refuted       Record an observation
-  query   APP [--version V] [--min-score F]   Retrieve scored facts
+  query   APP [--version V] [--min-score F]   Retrieve scored facts (--format rich|json|markdown)
   log     [--app APP] [--json]                List all stored facts
   status                                      Show store info and stats
+  decay   APP [--min-score F] [--format F]    Show score decay projections for an app
+  export  APP [-o FILE] [--bootstrap]         Export facts as JSON (bootstrap pack optional)
 ```
 
 ### Examples
@@ -140,8 +153,38 @@ clickproof query salesforce --min-score 0.6
 # Get JSON output for scripting
 clickproof query salesforce --json | jq '.facts[].fact.element'
 
+# Get Markdown output (ready to paste in issues / PRs)
+clickproof query salesforce --format markdown
+
+# Show score decay projections
+clickproof decay salesforce --min-score 0.6
+
+# Export facts to a file
+clickproof export salesforce -o salesforce_facts.json
+
 # Show store info
 clickproof status
+```
+
+---
+
+## Formatters
+
+clickproof ships three output formatters in `clickproof.report` (also importable from `clickproof`):
+
+| Function | Description |
+|----------|-------------|
+| `print_facts(pairs, console)` | Rich-formatted console table |
+| `to_json(pairs)` | JSON string — `{"count": N, "facts": [...]}` |
+| `to_markdown(pairs)` | Markdown table — ready to paste in issue comments and PRs |
+
+```python
+from clickproof import FactRetriever, FactScorer, FactStore, to_markdown
+
+with FactStore("my_app.db") as store:
+    retriever = FactRetriever(store, FactScorer())
+    pairs = retriever.query("salesforce", min_score=0.6)
+    print(to_markdown(pairs))
 ```
 
 ---
@@ -222,8 +265,12 @@ clickproof/
 │   ├── cli.py             Click CLI
 │   ├── api.py             FastAPI server
 │   └── mcp_server.py      MCP server
-├── tests/                 45+ pytest tests
-├── examples/demo.py       Standalone walkthrough
+├── tests/                 166 pytest tests
+├── examples/
+│   ├── demo.py                      Standalone walkthrough
+│   ├── computer_use_agent.py        Computer-use agent integration
+│   ├── multi_agent_shared_memory.py Multi-agent shared memory example
+│   └── web_scraper_validation.py    Web scraper validation example
 ├── action.yml             GitHub Action
 └── pyproject.toml
 ```
