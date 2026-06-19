@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import time
+from typing import Any
 
 from fastapi import FastAPI, HTTPException, Query
 from pydantic import BaseModel
@@ -57,7 +58,7 @@ def health() -> dict[str, str]:
 
 
 @app.post("/fact")
-def add_fact(body: FactIn) -> dict:
+def add_fact(body: FactIn) -> dict[str, Any]:
     """Add a UIFact to the store."""
     fact = UIFact(
         app_name=body.app_name,
@@ -74,7 +75,7 @@ def add_fact(body: FactIn) -> dict:
 
 
 @app.post("/observe")
-def add_observation(body: ObservationIn) -> dict:
+def add_observation(body: ObservationIn) -> dict[str, Any]:
     """Record a FactObservation confirming or refuting a UIFact."""
     obs = FactObservation(
         fact_id=body.fact_id,
@@ -96,7 +97,7 @@ def query_facts(
     app_version: str | None = Query(None, description="Optional version filter."),
     min_score: float = Query(0.5, description="Minimum score threshold."),
     db: str = Query(_DEFAULT_DB, description="Database path."),
-) -> list[dict]:
+) -> list[dict[str, Any]]:
     """Retrieve scored facts for an application."""
     with _store(db) as store:
         retriever = FactRetriever(store, FactScorer())
@@ -108,7 +109,7 @@ def query_facts(
 def list_facts(
     app_name: str | None = Query(None, description="Optional app filter."),
     db: str = Query(_DEFAULT_DB, description="Database path."),
-) -> list[dict]:
+) -> list[dict[str, Any]]:
     """List all stored facts."""
     with _store(db) as store:
         facts = store.list_facts(app_name=app_name)
@@ -120,7 +121,7 @@ def bootstrap(
     app_name: str = Query(..., description="Application name to bootstrap."),
     app_version: str = Query("unknown", description="App version."),
     db: str = Query(_DEFAULT_DB, description="Database path."),
-) -> dict:
+) -> dict[str, Any]:
     """Return a text context string for agent system prompt injection."""
     with _store(db) as store:
         retriever = FactRetriever(store, FactScorer())

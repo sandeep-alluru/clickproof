@@ -27,7 +27,7 @@ def add_ui_fact(
     outcome: str,
     context: str = "",
     confidence: float = 1.0,
-) -> dict:
+) -> dict[str, Any]:
     """Add a UIFact to the clickproof store.
 
     Args:
@@ -60,7 +60,7 @@ def query_facts(
     app_name: str,
     app_version: str | None = None,
     min_score: float = 0.5,
-) -> list[dict]:
+) -> list[dict[str, Any]]:
     """Query UI behavioral facts for an application.
 
     Args:
@@ -103,7 +103,7 @@ def clickproof_add_fact(
     outcome: str,
     context: str = "",
     confidence: float = 1.0,
-) -> dict:
+) -> dict[str, Any]:
     """Store a UI behavioral fact. Returns ``{"id": fact.id}``."""
     fact = UIFact(
         app_name=app_name,
@@ -123,7 +123,7 @@ def clickproof_observe(
     fact_id: str,
     confirmed: bool,
     agent_run_id: str = "",
-) -> dict:
+) -> dict[str, Any]:
     """Record a FactObservation. Returns ``{"id": obs.id}``."""
     obs = FactObservation(
         fact_id=fact_id,
@@ -140,7 +140,7 @@ def clickproof_query(
     app_name: str,
     app_version: str | None = None,
     min_score: float = 0.5,
-) -> dict:
+) -> dict[str, Any]:
     """Query scored facts. Returns ``{"facts": [...], "count": N}``."""
     with _get_store() as store:
         retriever = FactRetriever(store, FactScorer())
@@ -149,7 +149,7 @@ def clickproof_query(
     return {"facts": facts, "count": len(facts)}
 
 
-def clickproof_bootstrap(app_name: str, app_version: str = "unknown") -> dict:
+def clickproof_bootstrap(app_name: str, app_version: str = "unknown") -> dict[str, Any]:
     """Return bootstrap context string. Returns ``{"context": ...}``."""
     with _get_store() as store:
         retriever = FactRetriever(store, FactScorer())
@@ -160,9 +160,9 @@ def clickproof_bootstrap(app_name: str, app_version: str = "unknown") -> dict:
 def run_server() -> None:
     """Run the clickproof MCP server (requires mcp package)."""
     try:
-        from mcp.server import Server  # type: ignore[import-untyped]
-        from mcp.server.stdio import stdio_server  # type: ignore[import-untyped]
-        from mcp.types import TextContent, Tool  # type: ignore[import-untyped]
+        from mcp.server import Server
+        from mcp.server.stdio import stdio_server
+        from mcp.types import TextContent, Tool
     except ImportError as exc:
         msg = (
             "The 'mcp' package is required to run the MCP server. "
