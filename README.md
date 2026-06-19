@@ -199,6 +199,15 @@ See `tools/openai-tools.json` for pre-built OpenAI function-calling tool definit
 
 ---
 
+## Case Studies
+
+See how teams are using clickproof in production:
+
+- [Eliminating Session Startup Latency in Enterprise RPA with Persistent UI Facts](docs/case-studies/rpa-computer-use-acceleration.md)
+- [Persistent CSS Selector Memory for High-Volume Web Data Extraction](docs/case-studies/web-agent-css-selector-memory.md)
+
+---
+
 ## Repository Tree
 
 ```
