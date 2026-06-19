@@ -16,7 +16,7 @@ Edit `~/.config/claude/claude_desktop_config.json` (Linux) or
 ```json
 {
   "mcpServers": {
-    "clickproof": {
+    "clickproof-mcp": {
       "command": "clickproof-mcp"
     }
   }

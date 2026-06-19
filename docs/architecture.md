@@ -5,7 +5,7 @@ clickproof is a pure-Python library. Persistent GUI behavioral facts for compute
 ## Module map
 
 ```
-src/clickproof/
+clickproof/
 ├── # TODO: fill in
 ```
 

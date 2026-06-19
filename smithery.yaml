@@ -15,4 +15,4 @@ startCommand:
     type: object
     properties: {}
   commandFunction: |-
-    (config) => ({ command: "python", args: ["-m", "clickproof.mcp_server"] })
+    (config) => ({ command: "clickproof-mcp" })

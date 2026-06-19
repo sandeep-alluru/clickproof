@@ -224,7 +224,7 @@ clickproof ships a built-in MCP server. Add it to your Claude configuration:
 ```json
 {
   "mcpServers": {
-    "clickproof": {
+    "clickproof-mcp": {
       "command": "clickproof-mcp",
       "env": { "CLICKPROOF_DB": "/path/to/clickproof.db" }
     }
