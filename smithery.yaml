@@ -1,18 +1,10 @@
-name: clickproof
-displayName: "Clickproof"
-description: "Persistent GUI behavioral facts — what the agent saw and clicked, content-addressed"
-license: MIT
-homepage: https://github.com/sandeep-alluru/clickproof
-repository: https://github.com/sandeep-alluru/clickproof
-keywords:
-  - ai-agents
-  - computer-use
-  - gui-automation
-  - mcp
 startCommand:
   type: stdio
   configSchema:
     type: object
     properties: {}
   commandFunction: |-
-    (config) => ({ command: "clickproof-mcp" })
+    (config) => ({
+      command: 'uvx',
+      args: ['clickproof-mcp']
+    })
