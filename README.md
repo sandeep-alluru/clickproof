@@ -292,3 +292,5 @@ Subscribe to [**The Silence Layer**](https://newsletter.salluru.dev) — weekly 
 ## Star History
 
 [![Star History Chart](https://api.star-history.com/svg?repos=sandeep-alluru/clickproof&type=Date)](https://star-history.com/#sandeep-alluru/clickproof&Date)
+
+<!-- mcp-name: io.github.sandeep-alluru/clickproof -->

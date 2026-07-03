@@ -39,6 +39,11 @@ class FactScore:
     last_observed: float
     staleness_days: float
 
+    @property
+    def last_seen_at(self) -> float:
+        """Alias for last_observed — provided for backward compatibility."""
+        return self.last_observed
+
     def to_dict(self) -> dict[str, Any]:
         """Serialize to a JSON-compatible dict."""
         return {
