@@ -87,9 +87,7 @@ class FactStore:
 
     def get_fact(self, fact_id: str) -> UIFact | None:
         """Return a UIFact by id, or None if not found."""
-        row = self._conn.execute(
-            "SELECT * FROM ui_facts WHERE id = ?", (fact_id,)
-        ).fetchone()
+        row = self._conn.execute("SELECT * FROM ui_facts WHERE id = ?", (fact_id,)).fetchone()
         if row is None:
             return None
         return self._row_to_fact(row)

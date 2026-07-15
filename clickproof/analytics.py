@@ -87,12 +87,8 @@ def project_decay(
             base_ratio = confirmed_count / count
             count_boost = _count_boost(count)
 
-        score_in_7_days = max(
-            0.0, _project_score(base_ratio, count_boost, staleness_days, 7.0)
-        )
-        score_in_30_days = max(
-            0.0, _project_score(base_ratio, count_boost, staleness_days, 30.0)
-        )
+        score_in_7_days = max(0.0, _project_score(base_ratio, count_boost, staleness_days, 7.0))
+        score_in_30_days = max(0.0, _project_score(base_ratio, count_boost, staleness_days, 30.0))
 
         # Solve: base_ratio * exp(-0.1 * (staleness + x)) * count_boost = min_score
         # => -0.1 * (staleness + x) = ln(min_score / (base_ratio * count_boost))
