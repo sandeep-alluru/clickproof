@@ -16,8 +16,11 @@ from clickproof.scorer import FactScore, FactScorer
 @pytest.fixture
 def sample_pair() -> tuple[UIFact, FactScore]:
     fact = UIFact(
-        app_name="salesforce", app_version="2025.11",
-        element="export-csv-button", action="click", outcome="opens-download-dialog",
+        app_name="salesforce",
+        app_version="2025.11",
+        element="export-csv-button",
+        action="click",
+        outcome="opens-download-dialog",
     )
     scorer = FactScorer()
     score = scorer.score(fact, [])
@@ -27,8 +30,7 @@ def sample_pair() -> tuple[UIFact, FactScore]:
 @pytest.fixture
 def multiple_pairs() -> list[tuple[UIFact, FactScore]]:
     facts = [
-        UIFact(app_name="app", app_version="1.0",
-               element=f"btn-{i}", action="click", outcome="ok")
+        UIFact(app_name="app", app_version="1.0", element=f"btn-{i}", action="click", outcome="ok")
         for i in range(3)
     ]
     scorer = FactScorer()
@@ -42,38 +44,28 @@ def _make_console() -> tuple[Console, io.StringIO]:
 
 
 class TestToJson:
-    def test_returns_valid_json(
-        self, sample_pair: tuple[UIFact, FactScore]
-    ) -> None:
+    def test_returns_valid_json(self, sample_pair: tuple[UIFact, FactScore]) -> None:
         result = to_json([sample_pair])
         parsed = json.loads(result)
         assert isinstance(parsed, dict)
 
-    def test_count_field(
-        self, multiple_pairs: list[tuple[UIFact, FactScore]]
-    ) -> None:
+    def test_count_field(self, multiple_pairs: list[tuple[UIFact, FactScore]]) -> None:
         result = to_json(multiple_pairs)
         parsed = json.loads(result)
         assert parsed["count"] == 3
 
-    def test_facts_field(
-        self, multiple_pairs: list[tuple[UIFact, FactScore]]
-    ) -> None:
+    def test_facts_field(self, multiple_pairs: list[tuple[UIFact, FactScore]]) -> None:
         result = to_json(multiple_pairs)
         parsed = json.loads(result)
         assert "facts" in parsed
         assert len(parsed["facts"]) == 3
 
-    def test_fact_contains_app_name(
-        self, sample_pair: tuple[UIFact, FactScore]
-    ) -> None:
+    def test_fact_contains_app_name(self, sample_pair: tuple[UIFact, FactScore]) -> None:
         result = to_json([sample_pair])
         parsed = json.loads(result)
         assert parsed["facts"][0]["fact"]["app_name"] == "salesforce"
 
-    def test_score_contains_score_field(
-        self, sample_pair: tuple[UIFact, FactScore]
-    ) -> None:
+    def test_score_contains_score_field(self, sample_pair: tuple[UIFact, FactScore]) -> None:
         result = to_json([sample_pair])
         parsed = json.loads(result)
         assert "score" in parsed["facts"][0]["score"]
@@ -86,27 +78,19 @@ class TestToJson:
 
 
 class TestToMarkdown:
-    def test_contains_clickproof_header(
-        self, sample_pair: tuple[UIFact, FactScore]
-    ) -> None:
+    def test_contains_clickproof_header(self, sample_pair: tuple[UIFact, FactScore]) -> None:
         md = to_markdown([sample_pair])
         assert "clickproof" in md
 
-    def test_contains_table(
-        self, sample_pair: tuple[UIFact, FactScore]
-    ) -> None:
+    def test_contains_table(self, sample_pair: tuple[UIFact, FactScore]) -> None:
         md = to_markdown([sample_pair])
         assert "|" in md
 
-    def test_contains_app_name(
-        self, sample_pair: tuple[UIFact, FactScore]
-    ) -> None:
+    def test_contains_app_name(self, sample_pair: tuple[UIFact, FactScore]) -> None:
         md = to_markdown([sample_pair])
         assert "salesforce" in md
 
-    def test_count_line(
-        self, multiple_pairs: list[tuple[UIFact, FactScore]]
-    ) -> None:
+    def test_count_line(self, multiple_pairs: list[tuple[UIFact, FactScore]]) -> None:
         md = to_markdown(multiple_pairs)
         assert "3" in md
 
@@ -117,9 +101,7 @@ class TestToMarkdown:
 
 
 class TestPrintFacts:
-    def test_prints_table_content(
-        self, sample_pair: tuple[UIFact, FactScore]
-    ) -> None:
+    def test_prints_table_content(self, sample_pair: tuple[UIFact, FactScore]) -> None:
         con, buf = _make_console()
         print_facts([sample_pair], console=con)
         output = buf.getvalue()
@@ -131,9 +113,7 @@ class TestPrintFacts:
         output = buf.getvalue()
         assert len(output) > 0
 
-    def test_multiple_facts(
-        self, multiple_pairs: list[tuple[UIFact, FactScore]]
-    ) -> None:
+    def test_multiple_facts(self, multiple_pairs: list[tuple[UIFact, FactScore]]) -> None:
         con, buf = _make_console()
         print_facts(multiple_pairs, console=con)
         output = buf.getvalue()
@@ -148,9 +128,7 @@ class TestPrintFact:
         output = buf.getvalue()
         assert "export-csv-button" in output
 
-    def test_prints_without_score(
-        self, sample_pair: tuple[UIFact, FactScore]
-    ) -> None:
+    def test_prints_without_score(self, sample_pair: tuple[UIFact, FactScore]) -> None:
         fact, _ = sample_pair
         con, buf = _make_console()
         print_fact(fact, console=con)
@@ -158,9 +136,14 @@ class TestPrintFact:
         assert "salesforce" in output
 
     def test_prints_context_when_present(self) -> None:
-        fact = UIFact(app_name="app", app_version="1.0",
-                      element="btn", action="click", outcome="ok",
-                      context="dashboard")
+        fact = UIFact(
+            app_name="app",
+            app_version="1.0",
+            element="btn",
+            action="click",
+            outcome="ok",
+            context="dashboard",
+        )
         con, buf = _make_console()
         print_fact(fact, console=con)
         output = buf.getvalue()

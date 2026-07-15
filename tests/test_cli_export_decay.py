@@ -71,9 +71,7 @@ class TestCliExport:
     def test_export_to_file(self, runner: CliRunner, db_path: str, tmp_path: Path) -> None:
         _add_fact_with_obs(db_path)
         out_file = str(tmp_path / "out.json")
-        result = runner.invoke(
-            main, ["--db", db_path, "export", "myapp", "--output", out_file]
-        )
+        result = runner.invoke(main, ["--db", db_path, "export", "myapp", "--output", out_file])
         assert result.exit_code == 0
         with open(out_file) as fh:
             data = json.load(fh)
@@ -84,9 +82,7 @@ class TestCliExport:
     ) -> None:
         _add_fact_with_obs(db_path)
         out_file = str(tmp_path / "out.json")
-        result = runner.invoke(
-            main, ["--db", db_path, "export", "myapp", "--output", out_file]
-        )
+        result = runner.invoke(main, ["--db", db_path, "export", "myapp", "--output", out_file])
         assert result.exit_code == 0
         # The console prints "Exported to ..."
         assert "Exported" in result.output or out_file in result.output
@@ -107,9 +103,7 @@ class TestCliDecay:
         assert result.exit_code == 0
 
     def test_decay_empty_store_json(self, runner: CliRunner, db_path: str) -> None:
-        result = runner.invoke(
-            main, ["--db", db_path, "decay", "myapp", "--format", "json"]
-        )
+        result = runner.invoke(main, ["--db", db_path, "decay", "myapp", "--format", "json"])
         assert result.exit_code == 0
         data = json.loads(result.output)
         assert data == []
@@ -121,9 +115,7 @@ class TestCliDecay:
 
     def test_decay_with_facts_json(self, runner: CliRunner, db_path: str) -> None:
         _add_fact_with_obs(db_path)
-        result = runner.invoke(
-            main, ["--db", db_path, "decay", "myapp", "--format", "json"]
-        )
+        result = runner.invoke(main, ["--db", db_path, "decay", "myapp", "--format", "json"])
         assert result.exit_code == 0
         data = json.loads(result.output)
         assert len(data) == 1
@@ -148,9 +140,7 @@ class TestCliDecay:
 
     def test_decay_json_recommendation_field(self, runner: CliRunner, db_path: str) -> None:
         _add_fact_with_obs(db_path)
-        result = runner.invoke(
-            main, ["--db", db_path, "decay", "myapp", "--format", "json"]
-        )
+        result = runner.invoke(main, ["--db", db_path, "decay", "myapp", "--format", "json"])
         data = json.loads(result.output)
         for row in data:
             assert row["recommendation"] in {"ok", "re-validate", "archive"}

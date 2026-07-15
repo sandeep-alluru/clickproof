@@ -26,8 +26,16 @@ class TestCliAdd:
     def test_add_basic(self, runner: CliRunner, db_path: str) -> None:
         result = runner.invoke(
             main,
-            ["--db", db_path, "add", "salesforce", "2025.11",
-             "export-csv-button", "click", "opens-download-dialog"],
+            [
+                "--db",
+                db_path,
+                "add",
+                "salesforce",
+                "2025.11",
+                "export-csv-button",
+                "click",
+                "opens-download-dialog",
+            ],
         )
         assert result.exit_code == 0
         assert "Added" in result.output
@@ -35,24 +43,41 @@ class TestCliAdd:
     def test_add_with_context(self, runner: CliRunner, db_path: str) -> None:
         result = runner.invoke(
             main,
-            ["--db", db_path, "add", "app", "1.0",
-             "btn", "click", "ok", "--context", "reports-page"],
+            [
+                "--db",
+                db_path,
+                "add",
+                "app",
+                "1.0",
+                "btn",
+                "click",
+                "ok",
+                "--context",
+                "reports-page",
+            ],
         )
         assert result.exit_code == 0
 
     def test_add_with_confidence(self, runner: CliRunner, db_path: str) -> None:
         result = runner.invoke(
             main,
-            ["--db", db_path, "add", "app", "1.0",
-             "btn", "click", "ok", "--confidence", "0.7"],
+            ["--db", db_path, "add", "app", "1.0", "btn", "click", "ok", "--confidence", "0.7"],
         )
         assert result.exit_code == 0
 
     def test_add_persists_to_store(self, runner: CliRunner, db_path: str) -> None:
         runner.invoke(
             main,
-            ["--db", db_path, "add", "salesforce", "2025.11",
-             "export-csv-button", "click", "opens-download-dialog"],
+            [
+                "--db",
+                db_path,
+                "add",
+                "salesforce",
+                "2025.11",
+                "export-csv-button",
+                "click",
+                "opens-download-dialog",
+            ],
         )
         with FactStore(db_path) as store:
             facts = store.list_facts()
@@ -115,8 +140,16 @@ class TestCliQuery:
     def test_query_returns_facts(self, runner: CliRunner, db_path: str) -> None:
         runner.invoke(
             main,
-            ["--db", db_path, "add", "salesforce", "2025.11",
-             "export-csv-button", "click", "opens-download-dialog"],
+            [
+                "--db",
+                db_path,
+                "add",
+                "salesforce",
+                "2025.11",
+                "export-csv-button",
+                "click",
+                "opens-download-dialog",
+            ],
         )
         result = runner.invoke(
             main,
@@ -146,8 +179,16 @@ class TestCliLog:
     def test_log_shows_facts(self, runner: CliRunner, db_path: str) -> None:
         runner.invoke(
             main,
-            ["--db", db_path, "add", "salesforce", "2025.11",
-             "export-csv-button", "click", "opens-download-dialog"],
+            [
+                "--db",
+                db_path,
+                "add",
+                "salesforce",
+                "2025.11",
+                "export-csv-button",
+                "click",
+                "opens-download-dialog",
+            ],
         )
         result = runner.invoke(main, ["--db", db_path, "log"])
         assert result.exit_code == 0
@@ -172,8 +213,16 @@ class TestCliStatus:
     def test_status_with_facts(self, runner: CliRunner, db_path: str) -> None:
         runner.invoke(
             main,
-            ["--db", db_path, "add", "salesforce", "2025.11",
-             "export-csv-button", "click", "opens-download-dialog"],
+            [
+                "--db",
+                db_path,
+                "add",
+                "salesforce",
+                "2025.11",
+                "export-csv-button",
+                "click",
+                "opens-download-dialog",
+            ],
         )
         result = runner.invoke(main, ["--db", db_path, "status"])
         assert result.exit_code == 0

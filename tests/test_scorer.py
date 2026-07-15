@@ -18,8 +18,11 @@ def scorer() -> FactScorer:
 @pytest.fixture
 def fact() -> UIFact:
     return UIFact(
-        app_name="app", app_version="1.0",
-        element="button", action="click", outcome="ok",
+        app_name="app",
+        app_version="1.0",
+        element="button",
+        action="click",
+        outcome="ok",
     )
 
 
@@ -41,28 +44,28 @@ class TestFactScorer:
         assert 0.6 <= fs.score <= 0.9
 
     def test_no_observations_zero_confidence(self, scorer: FactScorer) -> None:
-        fact = UIFact(app_name="app", app_version="1.0",
-                      element="btn", action="click", outcome="ok", confidence=0.0)
+        fact = UIFact(
+            app_name="app",
+            app_version="1.0",
+            element="btn",
+            action="click",
+            outcome="ok",
+            confidence=0.0,
+        )
         fs = scorer.score(fact, [])
         assert fs.score == 0.0
 
-    def test_all_confirmed_gives_high_score(
-        self, scorer: FactScorer, fact: UIFact
-    ) -> None:
+    def test_all_confirmed_gives_high_score(self, scorer: FactScorer, fact: UIFact) -> None:
         obs = [_obs(fact.id, confirmed=True, seconds_ago=i * 10) for i in range(5)]
         fs = scorer.score(fact, obs)
         assert fs.score > 0.5
 
-    def test_all_refuted_gives_low_score(
-        self, scorer: FactScorer, fact: UIFact
-    ) -> None:
+    def test_all_refuted_gives_low_score(self, scorer: FactScorer, fact: UIFact) -> None:
         obs = [_obs(fact.id, confirmed=False, seconds_ago=i * 10) for i in range(5)]
         fs = scorer.score(fact, obs)
         assert fs.score == 0.0
 
-    def test_mixed_observations_intermediate(
-        self, scorer: FactScorer, fact: UIFact
-    ) -> None:
+    def test_mixed_observations_intermediate(self, scorer: FactScorer, fact: UIFact) -> None:
         obs = [
             _obs(fact.id, confirmed=True, seconds_ago=30),
             _obs(fact.id, confirmed=False, seconds_ago=20),
@@ -88,18 +91,14 @@ class TestFactScorer:
         old_score = scorer.score(fact, old_obs)
         assert recent_score.score > old_score.score
 
-    def test_more_observations_boost_score(
-        self, scorer: FactScorer, fact: UIFact
-    ) -> None:
+    def test_more_observations_boost_score(self, scorer: FactScorer, fact: UIFact) -> None:
         one_obs = [_obs(fact.id, confirmed=True, seconds_ago=5)]
         ten_obs = [_obs(fact.id, confirmed=True, seconds_ago=5 + i) for i in range(10)]
         score_one = scorer.score(fact, one_obs).score
         score_ten = scorer.score(fact, ten_obs).score
         assert score_ten > score_one
 
-    def test_score_clipped_to_unit_interval(
-        self, scorer: FactScorer, fact: UIFact
-    ) -> None:
+    def test_score_clipped_to_unit_interval(self, scorer: FactScorer, fact: UIFact) -> None:
         obs = [_obs(fact.id, confirmed=True, seconds_ago=1) for _ in range(100)]
         fs = scorer.score(fact, obs)
         assert 0.0 <= fs.score <= 1.0
@@ -114,10 +113,16 @@ class TestFactScorer:
 
     def test_batch_score_returns_all(self, scorer: FactScorer) -> None:
         from clickproof.store import FactStore
+
         with FactStore(":memory:") as store:
             facts = [
-                UIFact(app_name="app", app_version="1.0",
-                       element=f"btn-{i}", action="click", outcome="ok")
+                UIFact(
+                    app_name="app",
+                    app_version="1.0",
+                    element=f"btn-{i}",
+                    action="click",
+                    outcome="ok",
+                )
                 for i in range(5)
             ]
             for f in facts:
@@ -125,9 +130,7 @@ class TestFactScorer:
             scores = scorer.batch_score(facts, store)
         assert len(scores) == 5
 
-    def test_staleness_days_near_zero_for_fresh(
-        self, scorer: FactScorer, fact: UIFact
-    ) -> None:
+    def test_staleness_days_near_zero_for_fresh(self, scorer: FactScorer, fact: UIFact) -> None:
         obs = [_obs(fact.id, confirmed=True, seconds_ago=1)]
         fs = scorer.score(fact, obs)
         assert fs.staleness_days < 0.01
