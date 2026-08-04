@@ -294,3 +294,7 @@ Subscribe to [**The Silence Layer**](https://newsletter.salluru.dev) — weekly 
 [![Star History Chart](https://api.star-history.com/svg?repos=sandeep-alluru/clickproof&type=Date)](https://star-history.com/#sandeep-alluru/clickproof&Date)
 
 <!-- mcp-name: io.github.sandeep-alluru/clickproof -->
+
+## Closed loop / Non-Ornament
+
+See [docs/CLOSED_LOOP.md](docs/CLOSED_LOOP.md) for when this library is load-bearing vs ornamental, and when **not** to use it.
