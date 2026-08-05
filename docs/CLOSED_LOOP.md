@@ -10,16 +10,23 @@ Content-addressed GUI behavioral facts for computer-use
 ## Reader (implemented)
 
 ```python
-from clickproof import gate_facts, assert_usable_facts
+from clickproof import gate_facts, assert_usable_facts, gate_click_attempt, ClickAttempt
 
 # Empty store / list → FAIL_LOUD (exit 2)
 # facts present but none usable above min_score → FAIL (exit 1)
 # usable facts → PASS (exit 0)
 out = gate_facts(path_or_store_or_list, min_score=0.5)
 assert_usable_facts([...])  # raises ClosedLoopError unless ok
+
+# OVERLAY-CLICK: force/overlay miss invalidates fact confidence
+out = gate_click_attempt(store, ClickAttempt(
+    fact_id=f.id, target_element=f.element,
+    hit=False, force_used=True, overlay_intercepted=True,
+))
 ```
 
-Module: `clickproof.closed_loop` · API: `gate_facts`, `assert_usable_facts`
+Module: `clickproof.closed_loop` · API: `gate_facts`, `gate_click_attempt`,
+`apply_click_outcome`, `ClickAttempt`
 
 ## Who reads the output?
 

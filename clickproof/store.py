@@ -92,6 +92,19 @@ class FactStore:
             return None
         return self._row_to_fact(row)
 
+    def set_confidence(self, fact_id: str, confidence: float) -> bool:
+        """Update stored confidence for a fact (OVERLAY-CLICK decay / invalidate).
+
+        Returns True if a row was updated. Confidence is clamped to [0.0, 1.0].
+        """
+        conf = max(0.0, min(1.0, float(confidence)))
+        cur = self._conn.execute(
+            "UPDATE ui_facts SET confidence = ? WHERE id = ?",
+            (conf, fact_id),
+        )
+        self._conn.commit()
+        return cur.rowcount > 0
+
     def list_facts(
         self,
         app_name: str | None = None,

@@ -15,11 +15,12 @@ When NOT to use:
 
 from __future__ import annotations
 
+import time
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Sequence
 
-from clickproof.fact import UIFact
+from clickproof.fact import FactObservation, UIFact
 from clickproof.scorer import FactScorer
 from clickproof.store import FactStore
 
@@ -190,6 +191,287 @@ def assert_usable_facts(
 ) -> GateOutcome:
     """Gate facts and raise :class:`ClosedLoopError` unless outcome is ok."""
     outcome = gate_facts(source, **kwargs)
+    if not outcome.ok:
+        raise ClosedLoopError(f"{outcome.verdict}: {outcome.reason}")
+    return outcome
+
+
+# ── OVERLAY-CLICK: force:true / overlay intercept must invalidate ─────────────
+
+
+@dataclass(frozen=True)
+class ClickAttempt:
+    """One computer-use click against a stored UIFact.
+
+    Farm OVERLAY-CLICK: Playwright ``force=True`` can hit an overlay
+    (e.g. X ``#layers``) and never throw — the agent thinks it clicked the
+    target. Callers must report whether the *intended* element was hit.
+    """
+
+    fact_id: str
+    target_element: str
+    hit: bool
+    force_used: bool = False
+    overlay_intercepted: bool = False
+    observed_effect: bool = True
+    agent_run_id: str = ""
+    notes: str = ""
+
+    @property
+    def is_miss(self) -> bool:
+        """True when the intended target did not receive a real click."""
+        if self.overlay_intercepted:
+            return True
+        if not self.hit:
+            return True
+        if self.force_used and not self.observed_effect:
+            # force:true silent success without effect — classic overlay mask
+            return True
+        return False
+
+    @property
+    def miss_kind(self) -> str | None:
+        if not self.is_miss:
+            return None
+        if self.overlay_intercepted:
+            return "overlay_intercept"
+        if self.force_used and not self.observed_effect:
+            return "force_silent_no_effect"
+        if not self.hit:
+            return "target_miss"
+        return "miss"
+
+
+@dataclass(frozen=True)
+class ClickOutcomeResult:
+    """Result of recording a click attempt against a fact."""
+
+    ok: bool
+    invalidated: bool
+    miss_kind: str | None
+    score_before: float
+    score_after: float
+    confidence_after: float
+    observation_confirmed: bool
+    fact_id: str
+    reason: str
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "ok": self.ok,
+            "invalidated": self.invalidated,
+            "miss_kind": self.miss_kind,
+            "score_before": self.score_before,
+            "score_after": self.score_after,
+            "confidence_after": self.confidence_after,
+            "observation_confirmed": self.observation_confirmed,
+            "fact_id": self.fact_id,
+            "reason": self.reason,
+        }
+
+
+def apply_click_outcome(
+    store: FactStore,
+    attempt: ClickAttempt,
+    *,
+    scorer: FactScorer | None = None,
+    miss_confidence_factor: float = 0.25,
+    invalidate_confidence: float = 0.05,
+) -> ClickOutcomeResult:
+    """Record click result: confirm on hit, refute + decay confidence on miss.
+
+    OVERLAY-CLICK product control:
+      * hit + effect → confirmed observation (confidence preserved)
+      * miss / overlay / force-without-effect → refuted observation and
+        hard confidence decay (``miss_confidence_factor`` or floor at
+        ``invalidate_confidence``)
+
+    Returns:
+        :class:`ClickOutcomeResult` with before/after scores.
+    """
+    scorer = scorer or FactScorer()
+    fact = store.get_fact(attempt.fact_id)
+    if fact is None:
+        return ClickOutcomeResult(
+            ok=False,
+            invalidated=False,
+            miss_kind="unknown_fact",
+            score_before=0.0,
+            score_after=0.0,
+            confidence_after=0.0,
+            observation_confirmed=False,
+            fact_id=attempt.fact_id,
+            reason=f"fact not found: {attempt.fact_id}",
+        )
+
+    obs_before = store.get_observations(fact.id)
+    score_before = scorer.score(fact, obs_before).score
+
+    if not attempt.is_miss:
+        store.add_observation(
+            FactObservation(
+                fact_id=fact.id,
+                observed_at=time.time(),
+                confirmed=True,
+                agent_run_id=attempt.agent_run_id or "click",
+            )
+        )
+        score_after = scorer.score(fact, store.get_observations(fact.id)).score
+        return ClickOutcomeResult(
+            ok=True,
+            invalidated=False,
+            miss_kind=None,
+            score_before=score_before,
+            score_after=score_after,
+            confidence_after=fact.confidence,
+            observation_confirmed=True,
+            fact_id=fact.id,
+            reason="click hit target; observation confirmed",
+        )
+
+    # Miss path — refute and decay
+    kind = attempt.miss_kind or "miss"
+    store.add_observation(
+        FactObservation(
+            fact_id=fact.id,
+            observed_at=time.time(),
+            confirmed=False,
+            agent_run_id=attempt.agent_run_id or f"miss:{kind}",
+        )
+    )
+    new_conf = max(invalidate_confidence, fact.confidence * miss_confidence_factor)
+    store.set_confidence(fact.id, new_conf)
+    updated = store.get_fact(fact.id) or fact
+    updated.confidence = new_conf
+    score_after = scorer.score(updated, store.get_observations(fact.id)).score
+
+    return ClickOutcomeResult(
+        ok=False,
+        invalidated=True,
+        miss_kind=kind,
+        score_before=score_before,
+        score_after=score_after,
+        confidence_after=new_conf,
+        observation_confirmed=False,
+        fact_id=fact.id,
+        reason=(
+            f"OVERLAY-CLICK miss kind={kind}: force_used={attempt.force_used} "
+            f"overlay={attempt.overlay_intercepted} hit={attempt.hit} "
+            f"effect={attempt.observed_effect}; confidence {fact.confidence:.3f}→{new_conf:.3f} "
+            f"score {score_before:.3f}→{score_after:.3f}"
+        ),
+    )
+
+
+def gate_click_attempt(
+    store: FactStore,
+    attempt: ClickAttempt,
+    *,
+    scorer: FactScorer | None = None,
+    min_score_after: float = 0.5,
+    apply: bool = True,
+    miss_confidence_factor: float = 0.25,
+) -> GateOutcome:
+    """Gate a click: OVERLAY-CLICK misses FAIL and invalidate the fact.
+
+    Args:
+        store: Fact store containing the target fact.
+        attempt: Click report from the computer-use runtime.
+        min_score_after: After a hit, require score >= this for PASS.
+        apply: If True, write refute/confirm + confidence decay to the store.
+        miss_confidence_factor: Multiplier applied to confidence on miss.
+
+    Returns:
+        FAIL_LOUD if fact missing; FAIL on miss or post-hit unusable score;
+        PASS only on verified hit with usable score.
+    """
+    if apply:
+        result = apply_click_outcome(
+            store,
+            attempt,
+            scorer=scorer,
+            miss_confidence_factor=miss_confidence_factor,
+        )
+    else:
+        # Dry-run classification only
+        fact = store.get_fact(attempt.fact_id)
+        if fact is None:
+            return _fail_loud(f"fact not found: {attempt.fact_id}")
+        scorer = scorer or FactScorer()
+        score = scorer.score(fact, store.get_observations(fact.id)).score
+        if attempt.is_miss:
+            return GateOutcome(
+                ok=False,
+                verdict="FAIL",
+                reason=f"OVERLAY-CLICK miss (dry-run) kind={attempt.miss_kind}",
+                exit_code=1,
+                fact_count=1,
+                usable_count=0,
+                stale_count=1,
+                min_score_seen=score,
+            )
+        usable = 1 if score >= min_score_after else 0
+        return GateOutcome(
+            ok=usable == 1,
+            verdict="PASS" if usable else "FAIL",
+            reason=f"dry-run hit score={score}",
+            exit_code=0 if usable else 1,
+            fact_count=1,
+            usable_count=usable,
+            stale_count=1 - usable,
+            min_score_seen=score,
+        )
+
+    if result.miss_kind == "unknown_fact":
+        return _fail_loud(result.reason)
+
+    if result.invalidated or not result.ok:
+        return GateOutcome(
+            ok=False,
+            verdict="FAIL",
+            reason=result.reason,
+            exit_code=1,
+            fact_count=1,
+            usable_count=0,
+            stale_count=1,
+            min_score_seen=result.score_after,
+        )
+
+    usable = 1 if result.score_after >= min_score_after else 0
+    if usable == 0:
+        return GateOutcome(
+            ok=False,
+            verdict="FAIL",
+            reason=(
+                f"click hit but score_after={result.score_after:.3f} "
+                f"< min_score_after={min_score_after}"
+            ),
+            exit_code=1,
+            fact_count=1,
+            usable_count=0,
+            stale_count=1,
+            min_score_seen=result.score_after,
+        )
+
+    return GateOutcome(
+        ok=True,
+        verdict="PASS",
+        reason=result.reason,
+        exit_code=0,
+        fact_count=1,
+        usable_count=1,
+        stale_count=0,
+        min_score_seen=result.score_after,
+    )
+
+
+def assert_click_ok(
+    store: FactStore,
+    attempt: ClickAttempt,
+    **kwargs: Any,
+) -> GateOutcome:
+    """Apply gate_click_attempt and raise :class:`ClosedLoopError` unless ok."""
+    outcome = gate_click_attempt(store, attempt, **kwargs)
     if not outcome.ok:
         raise ClosedLoopError(f"{outcome.verdict}: {outcome.reason}")
     return outcome

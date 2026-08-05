@@ -7,9 +7,14 @@ import importlib.metadata
 from clickproof.analytics import DecayProjection, project_decay, stale_facts
 from clickproof.bulk import export_bootstrap_pack, export_facts, import_facts
 from clickproof.closed_loop import (
+    ClickAttempt,
+    ClickOutcomeResult,
     ClosedLoopError,
     GateOutcome,
+    apply_click_outcome,
+    assert_click_ok,
     assert_usable_facts,
+    gate_click_attempt,
     gate_facts,
 )
 from clickproof.fact import FactObservation, UIFact
@@ -21,6 +26,8 @@ from clickproof.store import FactStore
 __version__ = importlib.metadata.version("clickproof")
 
 __all__ = [
+    "ClickAttempt",
+    "ClickOutcomeResult",
     "ClosedLoopError",
     "DecayProjection",
     "FactObservation",
@@ -31,9 +38,12 @@ __all__ = [
     "GateOutcome",
     "UIFact",
     "__version__",
+    "apply_click_outcome",
+    "assert_click_ok",
     "assert_usable_facts",
     "export_bootstrap_pack",
     "export_facts",
+    "gate_click_attempt",
     "gate_facts",
     "import_facts",
     "project_decay",
