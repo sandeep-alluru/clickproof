@@ -1,30 +1,45 @@
 # Closed loop — `clickproof`
 
-**Status:** stub (eagle-eyes Phase 0 / 2026-08-04)  
+**Status:** wired (eagle-eyes / 2026-08-05)  
 **Owner loop:** L3 computer-use only
 
 ## Load-bearing job
 
 Content-addressed GUI behavioral facts for computer-use
 
+## Reader (implemented)
+
+```python
+from clickproof import gate_facts, assert_usable_facts
+
+# Empty store / list → FAIL_LOUD (exit 2)
+# facts present but none usable above min_score → FAIL (exit 1)
+# usable facts → PASS (exit 0)
+out = gate_facts(path_or_store_or_list, min_score=0.5)
+assert_usable_facts([...])  # raises ClosedLoopError unless ok
+```
+
+Module: `clickproof.closed_loop` · API: `gate_facts`, `assert_usable_facts`
+
 ## Who reads the output?
 
-Computer-use agent loads facts before session; updates after
+Computer-use agent / CI / eagle-eyes before trusting GUI facts for action selection
 
 ## What outcome changes?
 
-Action selection uses confidence; decay on UI change
+Block on empty fact DB; block or warn when all scores are below min_score (decay)
 
 ## When NOT to use (anti-ornament)
 
-
+Never treat an empty fact store as silent PASS / "no constraints"
 
 ## Non-Ornament checklist
 
-- [ ] Reader implemented in CI, gate, or eagle-eyes script
-- [ ] Empty/wrong output fails loudly
-- [ ] Not exposed as free MCP in product agents
+- [x] Reader implemented in library (`closed_loop.gate_facts`)
+- [x] Empty/wrong output fails loudly (exit 2)
+- [x] Not exposed as free MCP in product agents
 - [ ] Linked gap IDs in mem0 when improving
+- [ ] eagle-eyes dogfood exercises `gate_facts` (optional next)
 
 ## Related failures (farm memory)
 
@@ -34,7 +49,7 @@ Action selection uses confidence; decay on UI change
 
 ## Daily rotation note
 
-This file exists so pillar **C (closed loop)** can rise with real wiring over time. Prefer small daily commits that move a checkbox toward done.
+Prefer small daily commits that keep the gate covered and used by readers.
 
 ## Auto-run 2026-08-04
 - pytest_rc: 0
