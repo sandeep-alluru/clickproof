@@ -475,3 +475,228 @@ def assert_click_ok(
     if not outcome.ok:
         raise ClosedLoopError(f"{outcome.verdict}: {outcome.reason}")
     return outcome
+
+
+# ── GUI-MEMORY: load known facts at session start (no cold re-discover) ───────
+
+import secrets as _secrets
+
+from clickproof.retriever import FactRetriever
+
+
+@dataclass(frozen=True)
+class SessionMemory:
+    """Facts loaded for one computer-use agent session.
+
+    GUI-MEMORY: sessions that skip load while the store already holds usable
+    facts for the app re-discover the UI every run — the farm failure mode.
+    """
+
+    session_id: str
+    app_name: str
+    app_version: str | None
+    loaded_fact_ids: tuple[str, ...]
+    bootstrap_text: str
+    loaded_at: float
+    usable_count: int
+    min_score: float
+
+    @property
+    def is_empty(self) -> bool:
+        return self.usable_count == 0 or len(self.loaded_fact_ids) == 0
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "session_id": self.session_id,
+            "app_name": self.app_name,
+            "app_version": self.app_version,
+            "loaded_fact_ids": list(self.loaded_fact_ids),
+            "bootstrap_text": self.bootstrap_text,
+            "loaded_at": self.loaded_at,
+            "usable_count": self.usable_count,
+            "min_score": self.min_score,
+            "is_empty": self.is_empty,
+        }
+
+
+def load_session_memory(
+    store: FactStore,
+    app_name: str,
+    *,
+    app_version: str | None = None,
+    session_id: str | None = None,
+    min_score: float = 0.5,
+    scorer: FactScorer | None = None,
+) -> SessionMemory:
+    """Load known UI facts into a session (bootstrap for computer-use agents).
+
+    This is the load-bearing *writer→reader* path for GUI-MEMORY: call at
+    session start so the agent does not re-discover controls every run.
+    """
+    retriever = FactRetriever(store, scorer=scorer)
+    pairs = retriever.query(
+        app_name=app_name,
+        app_version=app_version,
+        min_score=min_score,
+    )
+    # bootstrap_context uses min_score=0.0 for text; we still only *count* usable
+    text = retriever.bootstrap_context(
+        app_name=app_name,
+        app_version=app_version or "unknown",
+    )
+    ids = tuple(f.id for f, _ in pairs)
+    return SessionMemory(
+        session_id=session_id or _secrets.token_hex(4),
+        app_name=app_name,
+        app_version=app_version,
+        loaded_fact_ids=ids,
+        bootstrap_text=text,
+        loaded_at=time.time(),
+        usable_count=len(pairs),
+        min_score=min_score,
+    )
+
+
+def store_usable_count(
+    store: FactStore,
+    app_name: str,
+    *,
+    app_version: str | None = None,
+    min_score: float = 0.5,
+    scorer: FactScorer | None = None,
+) -> int:
+    """Count usable facts in the store for *app_name* (no session load)."""
+    retriever = FactRetriever(store, scorer=scorer)
+    return len(
+        retriever.query(app_name=app_name, app_version=app_version, min_score=min_score)
+    )
+
+
+def gate_session_memory(
+    store: FactStore,
+    session: SessionMemory | None,
+    *,
+    app_name: str,
+    app_version: str | None = None,
+    min_score: float = 0.5,
+    require_load_when_known: bool = True,
+    scorer: FactScorer | None = None,
+) -> GateOutcome:
+    """Gate session bootstrap against the durable fact store (GUI-MEMORY).
+
+    * Store has usable facts for app, session is ``None`` or empty load →
+      **FAIL** (re-discover trap — known UI not injected).
+    * Store empty for app → **FAIL_LOUD** (nothing to remember; cold discover
+      is expected but not a silent pass of "memory ok").
+    * Session loaded usable facts matching store → **PASS**.
+
+    Args:
+        store: Durable :class:`FactStore`.
+        session: Result of :func:`load_session_memory`, or None if agent skipped.
+        app_name: Application under automation.
+        require_load_when_known: If True (default), skip-load with known facts fails.
+    """
+    known = store_usable_count(
+        store,
+        app_name,
+        app_version=app_version,
+        min_score=min_score,
+        scorer=scorer,
+    )
+
+    if known == 0:
+        return GateOutcome(
+            ok=False,
+            verdict="FAIL_LOUD",
+            reason=(
+                f"GUI-MEMORY: no usable facts for app {app_name!r} "
+                f"(min_score={min_score}) — store empty; cold re-discover only, "
+                f"not a memory pass"
+            ),
+            exit_code=2,
+            fact_count=0,
+            usable_count=0,
+            stale_count=0,
+            min_score_seen=None,
+        )
+
+    if session is None:
+        if require_load_when_known:
+            return GateOutcome(
+                ok=False,
+                verdict="FAIL",
+                reason=(
+                    f"GUI-MEMORY: store has {known} usable fact(s) for {app_name!r} "
+                    f"but session never called load_session_memory — refusing "
+                    f"cold re-discover"
+                ),
+                exit_code=1,
+                fact_count=known,
+                usable_count=0,
+                stale_count=known,
+                min_score_seen=None,
+            )
+        return GateOutcome(
+            ok=False,
+            verdict="FAIL",
+            reason="session is None",
+            exit_code=1,
+            fact_count=known,
+            usable_count=0,
+            stale_count=known,
+        )
+
+    if session.app_name != app_name:
+        return GateOutcome(
+            ok=False,
+            verdict="FAIL",
+            reason=(
+                f"GUI-MEMORY: session app {session.app_name!r} != gate app {app_name!r}"
+            ),
+            exit_code=1,
+            fact_count=known,
+            usable_count=session.usable_count,
+            stale_count=max(0, known - session.usable_count),
+        )
+
+    if session.is_empty and require_load_when_known:
+        return GateOutcome(
+            ok=False,
+            verdict="FAIL",
+            reason=(
+                f"GUI-MEMORY: session {session.session_id!r} loaded 0 usable facts "
+                f"but store has {known} for {app_name!r} — incomplete bootstrap"
+            ),
+            exit_code=1,
+            fact_count=known,
+            usable_count=0,
+            stale_count=known,
+        )
+
+    return GateOutcome(
+        ok=True,
+        verdict="PASS",
+        reason=(
+            f"GUI-MEMORY ok: session {session.session_id!r} loaded "
+            f"{session.usable_count}/{known} usable fact(s) for {app_name!r}"
+        ),
+        exit_code=0,
+        fact_count=known,
+        usable_count=session.usable_count,
+        stale_count=max(0, known - session.usable_count),
+        min_score_seen=None,
+    )
+
+
+def assert_session_bootstrapped(
+    store: FactStore,
+    session: SessionMemory | None,
+    *,
+    app_name: str,
+    **kwargs: Any,
+) -> GateOutcome:
+    """Raise :class:`ClosedLoopError` unless session memory gate passes."""
+    outcome = gate_session_memory(store, session, app_name=app_name, **kwargs)
+    if not outcome.ok:
+        raise ClosedLoopError(f"{outcome.verdict}: {outcome.reason}")
+    return outcome

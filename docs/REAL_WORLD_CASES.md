@@ -45,7 +45,39 @@ intercept after every click (especially when `force=True`) and call
 
 ---
 
+## Case GUI-MEMORY (farm) — MAJOR
+
+**Source:** eagle-eyes `REAL_WORK_QUEUE` P1 — *re-discover UI every session*;
+related to long-horizon computer-use agents (public ABSeeker / hierarchical
+graph memory papers, Track B).
+
+**What failed:**
+
+Computer-use agents start each session **cold**: they ignore the durable
+fact store and re-probe the same buttons/flows. `gate_facts` alone only
+checks that the store is non-empty — it does not require the **session**
+to *load* those facts into agent context.
+
+**Product fix in this repo:**
+
+| Control | API |
+|---------|-----|
+| Session load | `load_session_memory(store, app_name)` → `SessionMemory` |
+| Usable count | `store_usable_count(store, app_name)` |
+| Gate | `gate_session_memory(store, session, app_name=...)` |
+| Skip load + known facts | **FAIL** (re-discover trap) |
+| Empty store for app | **FAIL_LOUD** |
+| Raise form | `assert_session_bootstrapped(...)` |
+
+**Tests:** `tests/test_gui_memory.py`
+
+**Non-Ornament:** Call `load_session_memory` at session start and
+`gate_session_memory` before acting. Bootstrap text belongs in the agent
+prompt (`SessionMemory.bootstrap_text`).
+
+---
+
 ## Related queue IDs
 
-- **OVERLAY-CLICK** — this case (P1)
-- **GUI-MEMORY** — re-discover UI every session (`gate_facts` partial)
+- **OVERLAY-CLICK** — force/overlay miss invalidation (P1)
+- **GUI-MEMORY** — this case (P1)
