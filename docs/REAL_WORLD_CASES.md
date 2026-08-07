@@ -77,6 +77,47 @@ prompt (`SessionMemory.bootstrap_text`).
 
 ---
 
+## Case INVISIBLE-INK — adversarial goals behind legitimate CUA tasks
+
+**Source:** Track B research (`20260807T161233Z`):
+
+| Case | Link / note |
+|------|-------------|
+| Invisible Ink Threats | arXiv 2608.02018 — adversarial goals behind legitimate tasks |
+| Qwen-CUA / Screenshots or Tools? | computer-use agent eval (same session) |
+| Cua / SpongeCake (HN) | computer-use runtimes |
+
+**What fails:**
+
+1. User task is benign (“close the cookie banner”).
+2. UI injection or model drift proposes **delete / export / auth / transfer**.
+3. Overlay/GUI gates only check *whether the click hit* — not whether the
+   action is **in scope** of the declared task.
+
+**Product in this repo:**
+
+| Control | API |
+|---------|-----|
+| Risk classifier | `is_high_risk_cua_action` / `DEFAULT_HIGH_RISK_CUA_ACTIONS` |
+| Task allowlist | `infer_allowlist_from_task` + explicit `allowed_actions` |
+| Pre-exec gate | `gate_task_alignment(task, action, …)` |
+| Target scope | `allowed_targets` for UI injection detours |
+| Raise form | `assert_task_aligned(...)` |
+
+**Rules (load-bearing):**
+
+- Empty task/action → **FAIL_LOUD**
+- High-risk action outside allowlist → **FAIL** (`human_required`)
+- Action outside allowlist → **FAIL**
+- Target outside `allowed_targets` → **FAIL**
+
+**Tests:** `tests/test_invisible_ink.py`
+
+**Non-Ornament:** Call `gate_task_alignment` **before** every high-risk CUA
+tool/click. Pair with `gate_click_attempt` (hit/miss) and
+`humanproof.gate_approval` for owner tokens. Hit success alone is not intent
+alignment.
+
 ## Related queue IDs
 
 - **OVERLAY-CLICK** — force/overlay miss invalidation (P1)

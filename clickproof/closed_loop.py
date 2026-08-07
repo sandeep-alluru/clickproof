@@ -1,28 +1,86 @@
-"""Closed-loop reader/gate for clickproof (Non-Ornament L1).
+"""Closed-loop reader/gate for clickproof (L1 + OVERLAY + GUI-MEMORY + INVISIBLE-INK).
 
 Who reads the output?
   Computer-use agents / CI / eagle-eyes: fact stores that must not be empty
-  ornaments and must surface low-confidence / stale UI facts before action.
+  ornaments and must surface low-confidence / stale UI facts before action;
+  task-alignment gates that refuse adversarial goals behind legitimate tasks.
 
 What outcome changes?
   Usable facts above min_score → PASS (exit 0).
   Facts present but all (or share) below min_score → FAIL (exit 1).
   Empty store, missing db, or zero facts → FAIL_LOUD (exit 2).
+  Proposed CUA action outside declared task allowlist → FAIL / FAIL_LOUD
+  (Invisible Ink adversarial-goal class).
 
 When NOT to use:
   Never treat an empty fact DB as a silent "no constraints" PASS.
+  Never execute high-risk UI actions without :func:`gate_task_alignment`.
 """
 
 from __future__ import annotations
 
+import re
 import time
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Sequence
+from typing import Any, Iterable, Sequence
 
 from clickproof.fact import FactObservation, UIFact
 from clickproof.scorer import FactScorer
 from clickproof.store import FactStore
+
+# High-risk CUA actions that must be explicitly allowed by the task (Invisible Ink).
+DEFAULT_HIGH_RISK_CUA_ACTIONS: frozenset[str] = frozenset(
+    {
+        "delete",
+        "remove",
+        "rm",
+        "wipe",
+        "download",
+        "export",
+        "transfer",
+        "send_email",
+        "share",
+        "paste_credentials",
+        "enter_password",
+        "grant_permission",
+        "allow_access",
+        "install",
+        "run_shell",
+        "exfiltrate",
+        "change_password",
+        "disable_2fa",
+        "export_data",
+        "copy_secrets",
+        "authorize_oauth",
+        "wire_transfer",
+        "pay",
+        "purchase",
+    }
+)
+
+# Benign navigation / observation actions (default allow when task is narrow).
+DEFAULT_SAFE_CUA_ACTIONS: frozenset[str] = frozenset(
+    {
+        "click",
+        "type",
+        "scroll",
+        "hover",
+        "read",
+        "screenshot",
+        "wait",
+        "focus",
+        "close",
+        "dismiss",
+        "open",
+        "navigate",
+        "select",
+        "confirm",
+        "cancel",
+        "back",
+        "refresh",
+    }
+)
 
 
 class ClosedLoopError(ValueError):
@@ -31,7 +89,7 @@ class ClosedLoopError(ValueError):
 
 @dataclass(frozen=True)
 class GateOutcome:
-    """Result of a closed-loop read of a clickproof fact store.
+    """Result of a closed-loop read of a clickproof fact store or task gate.
 
     Attributes:
         ok: True only when a pipeline may continue (PASS).
@@ -42,6 +100,10 @@ class GateOutcome:
         usable_count: Facts with score >= min_score.
         stale_count: Facts with score < min_score.
         min_score_seen: Lowest score among facts (None if empty).
+        human_required: True when adversarial/out-of-scope needs human review.
+        action: Proposed action when task-alignment gated.
+        task: Declared task when task-alignment gated.
+        risk: ``safe`` / ``high_risk`` when classified.
     """
 
     ok: bool
@@ -52,6 +114,10 @@ class GateOutcome:
     usable_count: int = 0
     stale_count: int = 0
     min_score_seen: float | None = None
+    human_required: bool = False
+    action: str | None = None
+    task: str | None = None
+    risk: str | None = None
 
     def to_dict(self) -> dict[str, Any]:
         """Serialise for JSON reports (eagle-eyes dogfood, CI artifacts)."""
@@ -64,6 +130,10 @@ class GateOutcome:
             "usable_count": self.usable_count,
             "stale_count": self.stale_count,
             "min_score_seen": self.min_score_seen,
+            "human_required": self.human_required,
+            "action": self.action,
+            "task": self.task,
+            "risk": self.risk,
         }
 
 
@@ -74,6 +144,10 @@ def _fail_loud(
     usable_count: int = 0,
     stale_count: int = 0,
     min_score_seen: float | None = None,
+    human_required: bool = False,
+    action: str | None = None,
+    task: str | None = None,
+    risk: str | None = None,
 ) -> GateOutcome:
     return GateOutcome(
         ok=False,
@@ -84,6 +158,38 @@ def _fail_loud(
         usable_count=usable_count,
         stale_count=stale_count,
         min_score_seen=min_score_seen,
+        human_required=human_required,
+        action=action,
+        task=task,
+        risk=risk,
+    )
+
+
+def _fail(
+    reason: str,
+    *,
+    fact_count: int = 0,
+    usable_count: int = 0,
+    stale_count: int = 0,
+    min_score_seen: float | None = None,
+    human_required: bool = True,
+    action: str | None = None,
+    task: str | None = None,
+    risk: str | None = None,
+) -> GateOutcome:
+    return GateOutcome(
+        ok=False,
+        verdict="FAIL",
+        reason=reason,
+        exit_code=1,
+        fact_count=fact_count,
+        usable_count=usable_count,
+        stale_count=stale_count,
+        min_score_seen=min_score_seen,
+        human_required=human_required,
+        action=action,
+        task=task,
+        risk=risk,
     )
 
 
@@ -697,6 +803,194 @@ def assert_session_bootstrapped(
 ) -> GateOutcome:
     """Raise :class:`ClosedLoopError` unless session memory gate passes."""
     outcome = gate_session_memory(store, session, app_name=app_name, **kwargs)
+    if not outcome.ok:
+        raise ClosedLoopError(f"{outcome.verdict}: {outcome.reason}")
+    return outcome
+
+
+# ---------------------------------------------------------------------------
+# INVISIBLE-INK — adversarial goals behind legitimate CUA tasks
+# ---------------------------------------------------------------------------
+
+
+def _canonical_action(action: str) -> str:
+    return (action or "").strip().lower().replace("-", "_").replace(" ", "_")
+
+
+def is_high_risk_cua_action(
+    action: str,
+    *,
+    extra: Iterable[str] | None = None,
+) -> bool:
+    """True if *action* is high-risk for computer-use (delete/export/auth/…)."""
+    a = _canonical_action(action)
+    if not a:
+        return True  # empty never safe
+    banned = set(DEFAULT_HIGH_RISK_CUA_ACTIONS)
+    if extra:
+        banned |= {_canonical_action(x) for x in extra}
+    head = a.split(":", 1)[0]
+    return a in banned or head in banned
+
+
+def normalize_allowlist(actions: Iterable[str] | None) -> frozenset[str]:
+    """Canonicalise an allowlist of action names."""
+    if not actions:
+        return frozenset()
+    return frozenset(_canonical_action(a) for a in actions if str(a).strip())
+
+
+def infer_allowlist_from_task(task: str) -> frozenset[str]:
+    """Heuristic allowlist from declared task text (no LLM).
+
+    Extracts simple verbs that appear as whole words and always includes a
+    base set of safe navigation actions. High-risk verbs only enter the
+    allowlist if the task text literally mentions them.
+    """
+    text = (task or "").lower()
+    tokens = set(re.findall(r"[a-z_][a-z0-9_]*", text))
+    allowed: set[str] = set(DEFAULT_SAFE_CUA_ACTIONS)
+    for risk in DEFAULT_HIGH_RISK_CUA_ACTIONS:
+        if risk in tokens or risk.replace("_", " ") in text:
+            allowed.add(risk)
+    # Common synonyms in task phrasing
+    if "close" in tokens or "dismiss" in tokens:
+        allowed |= {"close", "dismiss", "click", "cancel"}
+    if "open" in tokens or "navigate" in tokens:
+        allowed |= {"open", "navigate", "click"}
+    if "fill" in tokens or "type" in tokens or "enter" in tokens:
+        allowed |= {"type", "click", "select", "focus"}
+        # "enter password" is high-risk — only if password mentioned
+        if "password" in tokens or "credential" in tokens:
+            allowed.add("enter_password")
+    return frozenset(allowed)
+
+
+def gate_task_alignment(
+    declared_task: str,
+    proposed_action: str,
+    *,
+    allowed_actions: Sequence[str] | None = None,
+    target: str | None = None,
+    allowed_targets: Sequence[str] | None = None,
+    refuse_high_risk_outside_allowlist: bool = True,
+    infer_from_task: bool = True,
+) -> GateOutcome:
+    """Block adversarial CUA actions behind a legitimate task (Invisible Ink).
+
+    Public case (arXiv 2608.02018): *Invisible Ink Threats — Adversarial Goals
+    Behind Legitimate Tasks in Computer-Use Agents*. The user/task text is
+    benign; UI injection or model drift proposes delete/export/auth that was
+    never authorized by the task.
+
+    Rules:
+
+    1. Empty task or empty action → **FAIL_LOUD**
+    2. Build allowlist from ``allowed_actions`` and/or ``infer_allowlist_from_task``
+    3. High-risk proposed action not in allowlist → **FAIL** (``human_required``)
+    4. Any proposed action not in allowlist when allowlist non-empty → **FAIL**
+    5. ``target`` not in ``allowed_targets`` when both set → **FAIL**
+    6. In-scope action → **PASS**
+
+    Args:
+        declared_task: User/task description for this CUA step/session.
+        proposed_action: Tool/click/verb the agent wants to run.
+        allowed_actions: Explicit allowlist (overrides pure inference if set;
+            merged with inference when ``infer_from_task`` is True).
+        target: Optional UI target / path / element id.
+        allowed_targets: Optional target allowlist.
+        refuse_high_risk_outside_allowlist: High-risk out-of-scope → FAIL.
+        infer_from_task: Merge heuristic verbs from task text into allowlist.
+    """
+    task = (declared_task or "").strip()
+    action = _canonical_action(proposed_action)
+    task_preview = task[:80] if task else None
+
+    if not task:
+        return _fail_loud(
+            "INVISIBLE-INK: empty declared_task — cannot align actions to a "
+            "phantom goal (adversarial free-run)",
+            human_required=True,
+            action=action or None,
+            task=None,
+            risk="high_risk",
+        )
+    if not action:
+        return _fail_loud(
+            "INVISIBLE-INK: empty proposed_action — cannot gate phantom CUA step",
+            human_required=True,
+            action=None,
+            task=task_preview,
+            risk="high_risk",
+        )
+
+    allow = set(normalize_allowlist(allowed_actions))
+    if infer_from_task:
+        allow |= set(infer_allowlist_from_task(task))
+    # Explicit allowlist alone is enough even if empty inference
+    if allowed_actions is not None and not infer_from_task:
+        allow = set(normalize_allowlist(allowed_actions))
+
+    risk = "high_risk" if is_high_risk_cua_action(action) else "safe"
+    head = action.split(":", 1)[0]
+    in_allow = action in allow or head in allow
+
+    if risk == "high_risk" and refuse_high_risk_outside_allowlist and not in_allow:
+        return _fail(
+            f"INVISIBLE-INK: high-risk action {action!r} not authorized by task "
+            f"{task_preview!r} allowlist={sorted(allow)[:12]} — "
+            f"adversarial goal behind legitimate task (arXiv 2608.02018)",
+            human_required=True,
+            action=action,
+            task=task_preview,
+            risk=risk,
+        )
+
+    if allow and not in_allow:
+        return _fail(
+            f"INVISIBLE-INK: action {action!r} outside task allowlist "
+            f"{sorted(allow)[:12]} for task {task_preview!r}",
+            human_required=True,
+            action=action,
+            task=task_preview,
+            risk=risk,
+        )
+
+    if target is not None and allowed_targets is not None:
+        targets = {str(t).strip() for t in allowed_targets if str(t).strip()}
+        t = str(target).strip()
+        if targets and t not in targets:
+            return _fail(
+                f"INVISIBLE-INK: target {t!r} not in allowed_targets "
+                f"(task={task_preview!r}) — possible UI injection detour",
+                human_required=True,
+                action=action,
+                task=task_preview,
+                risk=risk,
+            )
+
+    return GateOutcome(
+        ok=True,
+        verdict="PASS",
+        reason=(
+            f"INVISIBLE-INK ok: action={action!r} risk={risk} "
+            f"task={task_preview!r} allowlist_size={len(allow)}"
+        ),
+        exit_code=0,
+        human_required=False,
+        action=action,
+        task=task_preview,
+        risk=risk,
+    )
+
+
+def assert_task_aligned(
+    declared_task: str,
+    proposed_action: str,
+    **kwargs: Any,
+) -> GateOutcome:
+    """Raise :class:`ClosedLoopError` unless :func:`gate_task_alignment` is ok."""
+    outcome = gate_task_alignment(declared_task, proposed_action, **kwargs)
     if not outcome.ok:
         raise ClosedLoopError(f"{outcome.verdict}: {outcome.reason}")
     return outcome
