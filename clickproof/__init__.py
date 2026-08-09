@@ -27,6 +27,17 @@ from clickproof.closed_loop import (
     load_session_memory,
     store_usable_count,
 )
+from clickproof.context_vars import (
+    DEFAULT_DOMINANT_KEYS,
+    DEFAULT_SPARSE_CONTEXT_KEYS,
+    CVEReport,
+    ContextDecision,
+    analyze_cve,
+    assert_context_variables_ok,
+    context_fingerprint,
+    gate_context_variables,
+    is_sparse_context_key,
+)
 from clickproof.fact import FactObservation, UIFact
 from clickproof.report import to_markdown
 from clickproof.retriever import FactRetriever
@@ -36,7 +47,11 @@ from clickproof.store import FactStore
 __version__ = importlib.metadata.version("clickproof")
 
 __all__ = [
+    "CVEReport",
+    "ContextDecision",
+    "DEFAULT_DOMINANT_KEYS",
     "DEFAULT_HIGH_RISK_CUA_ACTIONS",
+    "DEFAULT_SPARSE_CONTEXT_KEYS",
     "ClickAttempt",
     "ClickOutcomeResult",
     "ClosedLoopError",
@@ -50,20 +65,25 @@ __all__ = [
     "SessionMemory",
     "UIFact",
     "__version__",
+    "analyze_cve",
     "apply_click_outcome",
     "assert_click_ok",
+    "assert_context_variables_ok",
     "assert_session_bootstrapped",
     "assert_task_aligned",
     "assert_usable_facts",
+    "context_fingerprint",
     "export_bootstrap_pack",
     "export_facts",
     "gate_click_attempt",
+    "gate_context_variables",
     "gate_facts",
     "gate_session_memory",
     "gate_task_alignment",
     "import_facts",
     "infer_allowlist_from_task",
     "is_high_risk_cua_action",
+    "is_sparse_context_key",
     "load_session_memory",
     "project_decay",
     "stale_facts",

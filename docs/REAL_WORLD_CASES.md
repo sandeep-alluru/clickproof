@@ -118,7 +118,46 @@ tool/click. Pair with `gate_click_attempt` (hit/miss) and
 `humanproof.gate_approval` for owner tokens. Hit success alone is not intent
 alignment.
 
+---
+
+## Case CVE / GeoReward — contextual variable overestimation (arXiv 2608.04504)
+
+**Source:** Track B research (`20260809T041233Z`) —
+[GeoReward: Mitigating Contextual Variable Overestimation](https://arxiv.org/abs/2608.04504).
+
+**What fails:**
+
+1. Multimodal / CUA agents overestimate dominant visual-textual cues (product,
+   dense image patches) and **ignore sparse** market/region/locale variables.
+2. Choices **collapse** to the same output across distinct geographic contexts.
+3. Hit/miss click gates and task allowlists do not check context attendance.
+
+**Product in this repo:**
+
+| Control | API |
+|---------|-----|
+| Decision type | `ContextDecision` |
+| Analysis | `analyze_cve` → `CVEReport` |
+| Key helpers | `is_sparse_context_key`, `context_fingerprint` |
+| Gate | `gate_context_variables(...)` |
+| Raise form | `assert_context_variables_ok` |
+
+**Rules (load-bearing):**
+
+- Empty decision / missing required sparse keys → **FAIL_LOUD**
+- Sparse present but not attended / dominant-only → **FAIL**
+- Cross-context collapse (same choice across markets) → **FAIL**
+- Sparse attended, distinct per-context choices → **PASS**
+
+**Tests:** `tests/test_context_vars.py`
+
+**Non-Ornament:** Call `gate_context_variables` before accepting market/locale-
+sensitive creatives or GUI paths. Pair with `gate_click_attempt` and
+`gate_task_alignment`.
+
 ## Related queue IDs
 
 - **OVERLAY-CLICK** — force/overlay miss invalidation (P1)
 - **GUI-MEMORY** — this case (P1)
+- **INVISIBLE-INK** — task alignment (P1)
+- **CVE** — contextual variable overestimation (this section)
