@@ -1,4 +1,4 @@
-"""clickproof FastAPI server — REST endpoints for UI behavioral facts."""
+"""clickproof FastAPI server - REST endpoints for UI behavioral facts."""
 
 from __future__ import annotations
 
@@ -53,7 +53,7 @@ class ObservationIn(BaseModel):
 
 @app.get("/health")
 def health() -> dict[str, str]:
-    """Health check — returns status and version."""
+    """Health check - returns status and version."""
     return {"status": "ok", "version": clickproof.__version__}
 
 

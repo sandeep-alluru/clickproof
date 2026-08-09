@@ -1,4 +1,4 @@
-"""GUI-MEMORY — load known UI facts at session start; refuse cold re-discover.
+"""GUI-MEMORY - load known UI facts at session start; refuse cold re-discover.
 
 Farm queue: re-discover UI every session.
 Public: long-horizon computer-use agents (ABSeeker / hierarchical memory papers).
@@ -35,9 +35,7 @@ def _seed(store: FactStore, app: str = "x.com", n: int = 2) -> list[UIFact]:
             recorded_at=now,
         )
         store.add_fact(f)
-        store.add_observation(
-            FactObservation(fact_id=f.id, observed_at=now, confirmed=True)
-        )
+        store.add_observation(FactObservation(fact_id=f.id, observed_at=now, confirmed=True))
         facts.append(f)
     return facts
 
@@ -95,7 +93,7 @@ def test_gate_app_mismatch_fails(mem_store: FactStore) -> None:
 
 def test_assert_session_bootstrapped_raises(mem_store: FactStore) -> None:
     _seed(mem_store, "x")
-    with pytest.raises(ClosedLoopError, match="GUI-MEMORY|FAIL"):
+    with pytest.raises(ClosedLoopError, match=r"GUI-MEMORY|FAIL"):
         assert_session_bootstrapped(mem_store, None, app_name="x", min_score=0.3)
 
 

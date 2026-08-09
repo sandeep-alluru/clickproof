@@ -79,7 +79,7 @@ def project_decay(
         count = fact_score.observation_count
 
         if count == 0:
-            # No observations — scorer uses fact.confidence as the base ratio
+            # No observations - scorer uses fact.confidence as the base ratio
             base_ratio = fact.confidence
             count_boost = 1.0
         else:

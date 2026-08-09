@@ -1,4 +1,4 @@
-"""Report formatters — Rich console, JSON, and Markdown output for clickproof."""
+"""Report formatters - Rich console, JSON, and Markdown output for clickproof."""
 
 from __future__ import annotations
 
@@ -32,7 +32,7 @@ def print_facts(
         return
 
     table = Table(
-        title="clickproof — UI Behavioral Facts",
+        title="clickproof - UI Behavioral Facts",
         show_header=True,
         header_style="bold cyan",
     )
@@ -121,7 +121,7 @@ def to_markdown(facts_scores: list[tuple[UIFact, FactScore]]) -> str:
         Markdown string with a header and table.
     """
     lines = [
-        "## clickproof — UI Behavioral Facts",
+        "## clickproof - UI Behavioral Facts",
         "",
         f"_{len(facts_scores)} fact(s) retrieved_",
         "",

@@ -1,4 +1,4 @@
-"""FactScorer — computes confidence scores from observation history."""
+"""FactScorer - computes confidence scores from observation history."""
 
 from __future__ import annotations
 
@@ -41,7 +41,7 @@ class FactScore:
 
     @property
     def last_seen_at(self) -> float:
-        """Alias for last_observed — provided for backward compatibility."""
+        """Alias for last_observed - provided for backward compatibility."""
         return self.last_observed
 
     def to_dict(self) -> dict[str, Any]:
@@ -84,7 +84,7 @@ class FactScorer:
         count = len(observations)
 
         if count == 0:
-            # No observations — use the initial confidence, apply mild staleness from recorded_at
+            # No observations - use the initial confidence, apply mild staleness from recorded_at
             staleness_days = (now - fact.recorded_at) / 86400.0
             decay = math.exp(-0.1 * staleness_days)
             score = fact.confidence * decay

@@ -19,13 +19,17 @@ When NOT to use:
 
 from __future__ import annotations
 
+import contextlib
 import re
+import secrets as _secrets
 import time
+from collections.abc import Iterable, Sequence
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Iterable, Sequence
+from typing import Any
 
 from clickproof.fact import FactObservation, UIFact
+from clickproof.retriever import FactRetriever
 from clickproof.scorer import FactScorer
 from clickproof.store import FactStore
 
@@ -212,7 +216,7 @@ def gate_facts(
         scorer: Optional :class:`FactScorer`; defaults to a new instance.
 
     Returns:
-        :class:`GateOutcome` — callers should ``sys.exit(outcome.exit_code)``.
+        :class:`GateOutcome` - callers should ``sys.exit(outcome.exit_code)``.
     """
     scorer = scorer or FactScorer()
     owns = False
@@ -236,17 +240,17 @@ def gate_facts(
                 for fact in facts:
                     obs = store.get_observations(fact.id)
                     scores.append(scorer.score(fact, obs).score)
-            except Exception as exc:  # noqa: BLE001
+            except Exception as exc:
                 return _fail_loud(f"open fact store failed: {exc.__class__.__name__}: {exc}")
         else:
             facts = list(source)
-            # Sequence path: no observations — score from fact.confidence via scorer
+            # Sequence path: no observations - score from fact.confidence via scorer
             for fact in facts:
                 scores.append(scorer.score(fact, []).score)
 
         if len(facts) == 0:
             return _fail_loud(
-                "empty facts — no load-bearing GUI behavioral facts to gate "
+                "empty facts - no load-bearing GUI behavioral facts to gate "
                 "(write-only store is ornament)"
             )
 
@@ -285,10 +289,8 @@ def gate_facts(
         )
     finally:
         if owns and store is not None:
-            try:
+            with contextlib.suppress(Exception):
                 store.close()
-            except Exception:  # noqa: BLE001
-                pass
 
 
 def assert_usable_facts(
@@ -310,7 +312,7 @@ class ClickAttempt:
     """One computer-use click against a stored UIFact.
 
     Farm OVERLAY-CLICK: Playwright ``force=True`` can hit an overlay
-    (e.g. X ``#layers``) and never throw — the agent thinks it clicked the
+    (e.g. X ``#layers``) and never throw - the agent thinks it clicked the
     target. Callers must report whether the *intended* element was hit.
     """
 
@@ -326,14 +328,12 @@ class ClickAttempt:
     @property
     def is_miss(self) -> bool:
         """True when the intended target did not receive a real click."""
-        if self.overlay_intercepted:
-            return True
-        if not self.hit:
-            return True
-        if self.force_used and not self.observed_effect:
-            # force:true silent success without effect — classic overlay mask
-            return True
-        return False
+        # force:true silent success without effect - classic overlay mask
+        return (
+            self.overlay_intercepted
+            or not self.hit
+            or (self.force_used and not self.observed_effect)
+        )
 
     @property
     def miss_kind(self) -> str | None:
@@ -435,7 +435,7 @@ def apply_click_outcome(
             reason="click hit target; observation confirmed",
         )
 
-    # Miss path — refute and decay
+    # Miss path - refute and decay
     kind = attempt.miss_kind or "miss"
     store.add_observation(
         FactObservation(
@@ -585,17 +585,13 @@ def assert_click_ok(
 
 # ── GUI-MEMORY: load known facts at session start (no cold re-discover) ───────
 
-import secrets as _secrets
-
-from clickproof.retriever import FactRetriever
-
 
 @dataclass(frozen=True)
 class SessionMemory:
     """Facts loaded for one computer-use agent session.
 
     GUI-MEMORY: sessions that skip load while the store already holds usable
-    facts for the app re-discover the UI every run — the farm failure mode.
+    facts for the app re-discover the UI every run - the farm failure mode.
     """
 
     session_id: str
@@ -673,9 +669,7 @@ def store_usable_count(
 ) -> int:
     """Count usable facts in the store for *app_name* (no session load)."""
     retriever = FactRetriever(store, scorer=scorer)
-    return len(
-        retriever.query(app_name=app_name, app_version=app_version, min_score=min_score)
-    )
+    return len(retriever.query(app_name=app_name, app_version=app_version, min_score=min_score))
 
 
 def gate_session_memory(
@@ -691,7 +685,7 @@ def gate_session_memory(
     """Gate session bootstrap against the durable fact store (GUI-MEMORY).
 
     * Store has usable facts for app, session is ``None`` or empty load →
-      **FAIL** (re-discover trap — known UI not injected).
+      **FAIL** (re-discover trap - known UI not injected).
     * Store empty for app → **FAIL_LOUD** (nothing to remember; cold discover
       is expected but not a silent pass of "memory ok").
     * Session loaded usable facts matching store → **PASS**.
@@ -716,7 +710,7 @@ def gate_session_memory(
             verdict="FAIL_LOUD",
             reason=(
                 f"GUI-MEMORY: no usable facts for app {app_name!r} "
-                f"(min_score={min_score}) — store empty; cold re-discover only, "
+                f"(min_score={min_score}) - store empty; cold re-discover only, "
                 f"not a memory pass"
             ),
             exit_code=2,
@@ -733,7 +727,7 @@ def gate_session_memory(
                 verdict="FAIL",
                 reason=(
                     f"GUI-MEMORY: store has {known} usable fact(s) for {app_name!r} "
-                    f"but session never called load_session_memory — refusing "
+                    f"but session never called load_session_memory - refusing "
                     f"cold re-discover"
                 ),
                 exit_code=1,
@@ -756,9 +750,7 @@ def gate_session_memory(
         return GateOutcome(
             ok=False,
             verdict="FAIL",
-            reason=(
-                f"GUI-MEMORY: session app {session.app_name!r} != gate app {app_name!r}"
-            ),
+            reason=(f"GUI-MEMORY: session app {session.app_name!r} != gate app {app_name!r}"),
             exit_code=1,
             fact_count=known,
             usable_count=session.usable_count,
@@ -771,7 +763,7 @@ def gate_session_memory(
             verdict="FAIL",
             reason=(
                 f"GUI-MEMORY: session {session.session_id!r} loaded 0 usable facts "
-                f"but store has {known} for {app_name!r} — incomplete bootstrap"
+                f"but store has {known} for {app_name!r} - incomplete bootstrap"
             ),
             exit_code=1,
             fact_count=known,
@@ -809,7 +801,7 @@ def assert_session_bootstrapped(
 
 
 # ---------------------------------------------------------------------------
-# INVISIBLE-INK — adversarial goals behind legitimate CUA tasks
+# INVISIBLE-INK - adversarial goals behind legitimate CUA tasks
 # ---------------------------------------------------------------------------
 
 
@@ -860,7 +852,7 @@ def infer_allowlist_from_task(task: str) -> frozenset[str]:
         allowed |= {"open", "navigate", "click"}
     if "fill" in tokens or "type" in tokens or "enter" in tokens:
         allowed |= {"type", "click", "select", "focus"}
-        # "enter password" is high-risk — only if password mentioned
+        # "enter password" is high-risk - only if password mentioned
         if "password" in tokens or "credential" in tokens:
             allowed.add("enter_password")
     return frozenset(allowed)
@@ -878,7 +870,7 @@ def gate_task_alignment(
 ) -> GateOutcome:
     """Block adversarial CUA actions behind a legitimate task (Invisible Ink).
 
-    Public case (arXiv 2608.02018): *Invisible Ink Threats — Adversarial Goals
+    Public case (arXiv 2608.02018): *Invisible Ink Threats - Adversarial Goals
     Behind Legitimate Tasks in Computer-Use Agents*. The user/task text is
     benign; UI injection or model drift proposes delete/export/auth that was
     never authorized by the task.
@@ -908,7 +900,7 @@ def gate_task_alignment(
 
     if not task:
         return _fail_loud(
-            "INVISIBLE-INK: empty declared_task — cannot align actions to a "
+            "INVISIBLE-INK: empty declared_task - cannot align actions to a "
             "phantom goal (adversarial free-run)",
             human_required=True,
             action=action or None,
@@ -917,7 +909,7 @@ def gate_task_alignment(
         )
     if not action:
         return _fail_loud(
-            "INVISIBLE-INK: empty proposed_action — cannot gate phantom CUA step",
+            "INVISIBLE-INK: empty proposed_action - cannot gate phantom CUA step",
             human_required=True,
             action=None,
             task=task_preview,
@@ -938,7 +930,7 @@ def gate_task_alignment(
     if risk == "high_risk" and refuse_high_risk_outside_allowlist and not in_allow:
         return _fail(
             f"INVISIBLE-INK: high-risk action {action!r} not authorized by task "
-            f"{task_preview!r} allowlist={sorted(allow)[:12]} — "
+            f"{task_preview!r} allowlist={sorted(allow)[:12]} - "
             f"adversarial goal behind legitimate task (arXiv 2608.02018)",
             human_required=True,
             action=action,
@@ -962,7 +954,7 @@ def gate_task_alignment(
         if targets and t not in targets:
             return _fail(
                 f"INVISIBLE-INK: target {t!r} not in allowed_targets "
-                f"(task={task_preview!r}) — possible UI injection detour",
+                f"(task={task_preview!r}) - possible UI injection detour",
                 human_required=True,
                 action=action,
                 task=task_preview,

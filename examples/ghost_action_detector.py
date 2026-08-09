@@ -26,7 +26,6 @@ from clickproof.report import to_json
 from clickproof.retriever import FactRetriever
 from clickproof.store import FactStore
 
-
 # ── Expected UI facts (registered once at pipeline setup) ─────────────────────
 
 EXPECTED_FACTS: list[UIFact] = [
@@ -179,7 +178,7 @@ def main() -> None:
             hr()
             print("[5] Business impact:\n")
             email_obs        = [o for o in observations
-                                if fact_by_id.get(o.fact_id, None) is not None
+                                if fact_by_id.get(o.fact_id) is not None
                                 and fact_by_id[o.fact_id].element == "send-email-button"]
             email_ghosts     = sum(1 for o in email_obs if not o.confirmed)
             total_email_runs = len(email_obs)

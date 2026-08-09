@@ -1,4 +1,4 @@
-"""FactStore — SQLite-backed persistence for UIFacts and FactObservations."""
+"""FactStore - SQLite-backed persistence for UIFacts and FactObservations."""
 
 from __future__ import annotations
 

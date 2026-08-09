@@ -1,4 +1,4 @@
-"""clickproof — persistent GUI behavioral facts for computer-use agents."""
+"""clickproof - persistent GUI behavioral facts for computer-use agents."""
 
 from __future__ import annotations
 
@@ -36,10 +36,10 @@ from clickproof.store import FactStore
 __version__ = importlib.metadata.version("clickproof")
 
 __all__ = [
+    "DEFAULT_HIGH_RISK_CUA_ACTIONS",
     "ClickAttempt",
     "ClickOutcomeResult",
     "ClosedLoopError",
-    "DEFAULT_HIGH_RISK_CUA_ACTIONS",
     "DecayProjection",
     "FactObservation",
     "FactRetriever",

@@ -1,4 +1,4 @@
-"""clickproof MCP server — Model Context Protocol tools for UI behavioral facts."""
+"""clickproof MCP server - Model Context Protocol tools for UI behavioral facts."""
 
 from __future__ import annotations
 

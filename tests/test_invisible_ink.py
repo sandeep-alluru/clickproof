@@ -1,7 +1,7 @@
-"""INVISIBLE-INK — adversarial goals behind legitimate CUA tasks.
+"""INVISIBLE-INK - adversarial goals behind legitimate CUA tasks.
 
 Public case (Track B 20260807T161233Z):
-  Invisible Ink Threats (arXiv 2608.02018) — adversarial goals behind
+  Invisible Ink Threats (arXiv 2608.02018) - adversarial goals behind
   legitimate computer-use tasks. Also maps to CUA/Qwen-CUA/Screenshots-or-Tools.
 
 Pre-fix hole: agent is given "close the dialog" but UI injection or drift

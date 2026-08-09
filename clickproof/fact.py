@@ -1,4 +1,4 @@
-"""UIFact and FactObservation data models — the content-addressed primitives of clickproof."""
+"""UIFact and FactObservation data models - the content-addressed primitives of clickproof."""
 
 from __future__ import annotations
 
@@ -29,7 +29,7 @@ class UIFact:
         context: Optional UI context, e.g. "reports-page".
         confidence: Initial confidence in [0.0, 1.0]. Default 1.0.
         recorded_at: Unix timestamp when this fact was recorded.
-        id: Content-addressed identifier — SHA-256[:16] of
+        id: Content-addressed identifier - SHA-256[:16] of
             "{app_name}|{app_version}|{element}|{action}".
     """
 
@@ -91,7 +91,7 @@ class FactObservation:
         observed_at: Unix timestamp when this observation was made.
         confirmed: True = fact still holds; False = fact no longer holds.
         agent_run_id: Optional tracing identifier.
-        id: Content-addressed identifier — SHA-256[:16] of
+        id: Content-addressed identifier - SHA-256[:16] of
             "{fact_id}|{observed_at}|{confirmed}".
     """
 

@@ -86,7 +86,7 @@ def import_facts(
 
 
 def export_bootstrap_pack(store: FactStore, app_name: str) -> str:
-    """Export a 'bootstrap pack' — minimal JSON with top-scored facts for an app.
+    """Export a 'bootstrap pack' - minimal JSON with top-scored facts for an app.
 
     Only facts with a score >= 0.5 are included, sorted by score descending,
     capped at the top 20.

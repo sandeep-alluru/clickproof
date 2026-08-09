@@ -1,4 +1,4 @@
-"""clickproof CLI — store, observe, and query UI behavioral facts."""
+"""clickproof CLI - store, observe, and query UI behavioral facts."""
 
 from __future__ import annotations
 
@@ -31,7 +31,7 @@ _console = Console()
 @click.version_option(package_name="clickproof")
 @click.pass_context
 def main(ctx: click.Context, db: str) -> None:
-    """clickproof — persistent GUI behavioral facts for computer-use agents."""
+    """clickproof - persistent GUI behavioral facts for computer-use agents."""
     ctx.ensure_object(dict)
     ctx.obj["db"] = db
 
@@ -323,7 +323,7 @@ def decay_cmd(ctx: click.Context, app: str, min_score: float, fmt: str) -> None:
         click.echo(json.dumps(rows, indent=2))
     else:
         table = Table(
-            title=f"Decay Projections — {app}",
+            title=f"Decay Projections - {app}",
             show_header=True,
             header_style="bold cyan",
         )

@@ -1,4 +1,4 @@
-"""Closed-loop reader — empty fact stores and unusable scores fail loudly."""
+"""Closed-loop reader - empty fact stores and unusable scores fail loudly."""
 
 from __future__ import annotations
 

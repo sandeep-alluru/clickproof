@@ -1,4 +1,4 @@
-"""FactRetriever — retrieves relevant facts for an agent session."""
+"""FactRetriever - retrieves relevant facts for an agent session."""
 
 from __future__ import annotations
 
@@ -29,9 +29,9 @@ class FactRetriever:
         """Return (fact, score) pairs sorted by score descending.
 
         Args:
-            app_name: Required — filter by application name.
-            app_version: Optional — filter to a specific version.
-            element: Optional — filter to a specific element (substring match).
+            app_name: Required - filter by application name.
+            app_version: Optional - filter to a specific version.
+            element: Optional - filter to a specific element (substring match).
             min_score: Minimum score threshold; facts below this are excluded.
         """
         facts = self._store.list_facts(app_name=app_name, app_version=app_version)

@@ -242,7 +242,7 @@ class TestExportBootstrapPack:
         assert data["facts"] == []
 
     def test_bootstrap_pack_excludes_low_score_facts(self) -> None:
-        """A fact with no observations has score < 0.5 after enough time — but a brand-new
+        """A fact with no observations has score < 0.5 after enough time - but a brand-new
         fact with confidence=1.0 and recorded_at=now scores near 1.0, so let's use
         a fact with 0 observations recorded long ago."""
         now = time.time()

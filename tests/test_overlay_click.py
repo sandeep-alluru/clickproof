@@ -1,4 +1,4 @@
-"""OVERLAY-CLICK — force:true / overlay intercept must invalidate facts.
+"""OVERLAY-CLICK - force:true / overlay intercept must invalidate facts.
 
 Farm (Qdrant salluru-dev): #layers overlay intercepts Playwright clicks;
 force:true hits overlay silently and never throws.
@@ -45,9 +45,7 @@ def _seed(store: FactStore, fact: UIFact, confirms: int = 3) -> None:
     store.add_fact(fact)
     now = time.time()
     for i in range(confirms):
-        store.add_observation(
-            FactObservation(fact_id=fact.id, observed_at=now - i, confirmed=True)
-        )
+        store.add_observation(FactObservation(fact_id=fact.id, observed_at=now - i, confirmed=True))
 
 
 def test_click_attempt_overlay_is_miss() -> None:
@@ -177,7 +175,7 @@ def test_unknown_fact_fails_loud(mem_store: FactStore) -> None:
 def test_assert_click_ok_raises_on_miss(mem_store: FactStore) -> None:
     f = _fact()
     _seed(mem_store, f)
-    with pytest.raises(ClosedLoopError, match="OVERLAY-CLICK|FAIL"):
+    with pytest.raises(ClosedLoopError, match=r"OVERLAY-CLICK|FAIL"):
         assert_click_ok(
             mem_store,
             ClickAttempt(
