@@ -17,8 +17,9 @@ Non-Ornament:
 
 from __future__ import annotations
 
+from collections.abc import Iterable, Mapping, Sequence
 from dataclasses import dataclass, field
-from typing import Any, Iterable, Mapping, Sequence
+from typing import Any
 
 from clickproof.closed_loop import ClosedLoopError, GateOutcome
 
@@ -165,10 +166,7 @@ def is_sparse_context_key(
         keys |= {_norm_key(x) for x in extra}
     if k in keys:
         return True
-    for s in keys:
-        if k.startswith(s + "_") or k.endswith("_" + s):
-            return True
-    return False
+    return any(k.startswith(s + "_") or k.endswith("_" + s) for s in keys)
 
 
 def context_fingerprint(sparse: Mapping[str, Any]) -> str:
@@ -192,7 +190,9 @@ def analyze_cve(
     """Analyse one decision (and optional batch) for CVE failure modes."""
     d = _as_decision(decision)
     required = [_norm_key(x) for x in (required_sparse_keys or ()) if str(x).strip()]
-    sparse_keys = {_norm_key(k) for k in d.sparse_context if d.sparse_context.get(k) not in (None, "")}
+    sparse_keys = {
+        _norm_key(k) for k in d.sparse_context if d.sparse_context.get(k) not in (None, "")
+    }
     # also count keys that match sparse taxonomy even if empty later
     present = tuple(
         sorted(
@@ -216,12 +216,8 @@ def analyze_cve(
     attended_sparse = tuple(sorted(k for k in present if k in attended_norm))
     ignored = tuple(sorted(k for k in present if k not in attended_norm))
 
-    dominant_vals = {
-        _norm_key(k): v
-        for k, v in d.dominant_cues.items()
-        if v not in (None, "")
-    }
-    dominant_only = bool(dominant_vals) and (not present or (present and not attended_sparse))
+    dominant_vals = {_norm_key(k): v for k, v in d.dominant_cues.items() if v not in (None, "")}
+    dominant_only = bool(dominant_vals) and (len(present) == 0 or len(attended_sparse) == 0)
 
     # Cross-context collapse: multiple distinct sparse fingerprints map to same choice
     collapsed: list[str] = []
@@ -239,7 +235,7 @@ def analyze_cve(
         groups: dict[str, list[str]] = defaultdict(list)
         for fp, ch in by_ctx.items():
             groups[str(ch)].append(fp)
-        for ch, fps in groups.items():
+        for _ch, fps in groups.items():
             if len(fps) >= 2:
                 collapsed.extend(fps)
 

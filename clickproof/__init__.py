@@ -30,8 +30,8 @@ from clickproof.closed_loop import (
 from clickproof.context_vars import (
     DEFAULT_DOMINANT_KEYS,
     DEFAULT_SPARSE_CONTEXT_KEYS,
-    CVEReport,
     ContextDecision,
+    CVEReport,
     analyze_cve,
     assert_context_variables_ok,
     context_fingerprint,
@@ -47,14 +47,14 @@ from clickproof.store import FactStore
 __version__ = importlib.metadata.version("clickproof")
 
 __all__ = [
-    "CVEReport",
-    "ContextDecision",
     "DEFAULT_DOMINANT_KEYS",
     "DEFAULT_HIGH_RISK_CUA_ACTIONS",
     "DEFAULT_SPARSE_CONTEXT_KEYS",
+    "CVEReport",
     "ClickAttempt",
     "ClickOutcomeResult",
     "ClosedLoopError",
+    "ContextDecision",
     "DecayProjection",
     "FactObservation",
     "FactRetriever",
