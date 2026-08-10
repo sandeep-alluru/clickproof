@@ -246,20 +246,30 @@ def analyze_multi_step_chain(
     for st in parsed:
         act = _canon_action(st.action)
         actions_canon.append(act)
-        if act and is_high_risk_cua_action(act, extra=extra_high_risk):
-            # allowed if task allowlist includes it
-            if act not in allow and act.split(":", 1)[0] not in allow:
-                high_risk.append(st.step_id)
+        if (
+            act
+            and is_high_risk_cua_action(act, extra=extra_high_risk)
+            and act not in allow
+            and act.split(":", 1)[0] not in allow
+        ):
+            # high-risk action not covered by task allowlist
+            high_risk.append(st.step_id)
         phrases = detect_injection_phrases(st.page_snippet, phrases=injection_phrases)
         if phrases:
             injections.append(st.step_id)
         host = _host_of(st)
-        if host and allowed_host_set and host not in allowed_host_set:
-            # allow subdomains of allowed
-            if not any(host == a or host.endswith("." + a) for a in allowed_host_set):
-                off_domain.append(host)
+        if (
+            host
+            and allowed_host_set
+            and host not in allowed_host_set
+            and not any(host == a or host.endswith("." + a) for a in allowed_host_set)
+        ):
+            # host outside allowlist (including subdomains of allowed)
+            off_domain.append(host)
 
-    patterns = cumulative_patterns if cumulative_patterns is not None else DEFAULT_CUMULATIVE_PATTERNS
+    patterns = (
+        cumulative_patterns if cumulative_patterns is not None else DEFAULT_CUMULATIVE_PATTERNS
+    )
     cum_hits: list[str] = []
     for pat in patterns:
         pat_c = [_canon_action(x) for x in pat]
@@ -454,11 +464,8 @@ def gate_multi_step_chain(
         for hit in report.cumulative_hits:
             terminal = hit.split("→")[-1] if "→" in hit else hit
             # if task explicitly allows export/send/etc terminal, skip
-            if terminal in allow or any(
-                is_high_risk_cua_action(terminal) and terminal in allow for _ in [0]
-            ):
-                if terminal in allow:
-                    continue
+            if terminal in allow:
+                continue
             residual.append(hit)
         if residual:
             return GateOutcome(
