@@ -155,9 +155,52 @@ alignment.
 sensitive creatives or GUI paths. Pair with `gate_click_attempt` and
 `gate_task_alignment`.
 
+---
+
+## Case STEPJACK — multi-step indirect prompt injection (arXiv 2608.06477)
+
+**Source:** Track B research (`20260810T041230Z`) —
+[StepJack: Benchmarking Computer-Use Agent Safety Against Multi-Step Indirect
+Prompt Injection](https://arxiv.org/abs/2608.06477v1).
+
+**What fails:**
+
+1. Adversarial goals are **decomposed** into innocuous-looking sub-steps and
+   planted across a **chain of pages** on the CUA navigation path.
+2. Single-step `gate_task_alignment` (INVISIBLE-INK) only sees one action —
+   cumulative copy→paste, off-domain hops, and page-planted phrases slip through.
+3. Agents claim task-complete after a multi-page trajectory that embeds injection.
+
+**Product in this repo:**
+
+| Control | API |
+|---------|-----|
+| Step type | `NavStep` |
+| Analysis | `analyze_multi_step_chain` → `StepJackReport` |
+| Phrase / host helpers | `detect_injection_phrases`, `hosts_from_task` |
+| Gate | `gate_multi_step_chain(steps, task, …)` |
+| Raise form | `assert_multi_step_ok` |
+
+**Rules (load-bearing):**
+
+- empty task / claim complete with zero steps → **FAIL_LOUD**
+- high-risk step not in task allowlist → **FAIL**
+- injection phrases in page snippets → **FAIL**
+- off-domain hosts outside task/allowlist → **FAIL**
+- cumulative soft patterns (copy→paste, fill→submit, …) → **FAIL**
+- optional `max_decomposition_depth` exceed → **FAIL**
+- clean in-domain chain → **PASS**
+
+**Tests:** `tests/test_stepjack.py`
+
+**Non-Ornament:** Call `gate_multi_step_chain` on multi-page CUA trajectories
+before accepting task-complete. Pair with per-step `gate_task_alignment` and
+`gate_click_attempt`.
+
 ## Related queue IDs
 
 - **OVERLAY-CLICK** — force/overlay miss invalidation (P1)
-- **GUI-MEMORY** — this case (P1)
-- **INVISIBLE-INK** — task alignment (P1)
-- **CVE** — contextual variable overestimation (this section)
+- **GUI-MEMORY** — session bootstrap (P1)
+- **INVISIBLE-INK** — single-step task alignment (P1)
+- **CVE** — contextual variable overestimation
+- **STEPJACK** — multi-step injection chain (this section)

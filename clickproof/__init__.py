@@ -42,13 +42,26 @@ from clickproof.fact import FactObservation, UIFact
 from clickproof.report import to_markdown
 from clickproof.retriever import FactRetriever
 from clickproof.scorer import FactScore, FactScorer
+from clickproof.stepjack import (
+    DEFAULT_CUMULATIVE_PATTERNS,
+    DEFAULT_INJECTION_PHRASES,
+    NavStep,
+    StepJackReport,
+    analyze_multi_step_chain,
+    assert_multi_step_ok,
+    detect_injection_phrases,
+    gate_multi_step_chain,
+    hosts_from_task,
+)
 from clickproof.store import FactStore
 
 __version__ = importlib.metadata.version("clickproof")
 
 __all__ = [
+    "DEFAULT_CUMULATIVE_PATTERNS",
     "DEFAULT_DOMINANT_KEYS",
     "DEFAULT_HIGH_RISK_CUA_ACTIONS",
+    "DEFAULT_INJECTION_PHRASES",
     "DEFAULT_SPARSE_CONTEXT_KEYS",
     "CVEReport",
     "ClickAttempt",
@@ -62,24 +75,31 @@ __all__ = [
     "FactScorer",
     "FactStore",
     "GateOutcome",
+    "NavStep",
     "SessionMemory",
+    "StepJackReport",
     "UIFact",
     "__version__",
     "analyze_cve",
+    "analyze_multi_step_chain",
     "apply_click_outcome",
     "assert_click_ok",
     "assert_context_variables_ok",
+    "assert_multi_step_ok",
     "assert_session_bootstrapped",
     "assert_task_aligned",
     "assert_usable_facts",
     "context_fingerprint",
+    "detect_injection_phrases",
     "export_bootstrap_pack",
     "export_facts",
     "gate_click_attempt",
     "gate_context_variables",
     "gate_facts",
+    "gate_multi_step_chain",
     "gate_session_memory",
     "gate_task_alignment",
+    "hosts_from_task",
     "import_facts",
     "infer_allowlist_from_task",
     "is_high_risk_cua_action",
