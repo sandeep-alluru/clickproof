@@ -54,6 +54,14 @@ from clickproof.stepjack import (
     hosts_from_task,
 )
 from clickproof.store import FactStore
+from clickproof.synchain import (
+    ArtifactIntegrityReport,
+    PersistentArtifact,
+    analyze_artifact_integrity,
+    artifact_content_fingerprint,
+    assert_artifacts_ok,
+    gate_artifact_integrity,
+)
 
 __version__ = importlib.metadata.version("clickproof")
 
@@ -63,6 +71,7 @@ __all__ = [
     "DEFAULT_HIGH_RISK_CUA_ACTIONS",
     "DEFAULT_INJECTION_PHRASES",
     "DEFAULT_SPARSE_CONTEXT_KEYS",
+    "ArtifactIntegrityReport",
     "CVEReport",
     "ClickAttempt",
     "ClickOutcomeResult",
@@ -76,13 +85,17 @@ __all__ = [
     "FactStore",
     "GateOutcome",
     "NavStep",
+    "PersistentArtifact",
     "SessionMemory",
     "StepJackReport",
     "UIFact",
     "__version__",
+    "analyze_artifact_integrity",
     "analyze_cve",
     "analyze_multi_step_chain",
     "apply_click_outcome",
+    "artifact_content_fingerprint",
+    "assert_artifacts_ok",
     "assert_click_ok",
     "assert_context_variables_ok",
     "assert_multi_step_ok",
@@ -93,6 +106,7 @@ __all__ = [
     "detect_injection_phrases",
     "export_bootstrap_pack",
     "export_facts",
+    "gate_artifact_integrity",
     "gate_click_attempt",
     "gate_context_variables",
     "gate_facts",

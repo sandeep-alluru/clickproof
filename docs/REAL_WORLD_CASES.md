@@ -197,10 +197,52 @@ Prompt Injection](https://arxiv.org/abs/2608.06477v1).
 before accepting task-complete. Pair with per-step `gate_task_alignment` and
 `gate_click_attempt`.
 
+---
+
+## Case SYNCHAIN — self-synthesized poisoned artifacts (arXiv 2608.06862)
+
+**Source:** Track B research backlog (`20260810T161237Z` / prior; session
+`20260811T001239Z` hit arxiv_error) —
+[SynChain: Inducing Computer-Use Agent Systems to Construct Their Own Attack
+Chains](https://arxiv.org/abs/2608.06862v1).
+
+**What fails:**
+
+1. CUAs persist **skills** and **memory** entries across sessions.
+2. Malicious influence is embedded in **auto-synthesized** artifacts that look
+   benign, survive state updates, and skip one-shot vetting.
+3. STEPJACK/INVISIBLE-INK gate live steps; they do not gate **loaded artifact**
+   integrity before reuse.
+
+**Product in this repo:**
+
+| Control | API |
+|---------|-----|
+| Artifact type | `PersistentArtifact` |
+| Fingerprint | `artifact_content_fingerprint` |
+| Analysis | `analyze_artifact_integrity` → `ArtifactIntegrityReport` |
+| Gate | `gate_artifact_integrity(...)` |
+| Raise form | `assert_artifacts_ok` |
+
+**Rules (load-bearing):**
+
+- claim loaded + empty inventory → **FAIL_LOUD**
+- auto-synthesized without `vetted` → **FAIL**
+- content fingerprint mismatch → **FAIL**
+- injection/poison phrases in body → **FAIL**
+- high-risk templates in unvetted/benign-wrapped skills → **FAIL**
+- vetted clean artifacts → **PASS**
+
+**Tests:** `tests/test_synchain.py`
+
+**Non-Ornament:** Call `gate_artifact_integrity` before loading skill/memory
+into a CUA session. Pair with `gate_session_memory` and `gate_multi_step_chain`.
+
 ## Related queue IDs
 
 - **OVERLAY-CLICK** — force/overlay miss invalidation (P1)
 - **GUI-MEMORY** — session bootstrap (P1)
 - **INVISIBLE-INK** — single-step task alignment (P1)
 - **CVE** — contextual variable overestimation
-- **STEPJACK** — multi-step injection chain (this section)
+- **STEPJACK** — multi-step injection chain
+- **SYNCHAIN** — persistent artifact poison (this section)
