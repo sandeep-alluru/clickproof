@@ -341,7 +341,10 @@ def gate_multi_step_chain(
         allowed_hosts: Host allowlist (default: hosts mentioned in task).
         claim_task_complete: Trajectory claimed as finished task.
         max_decomposition_depth: Optional cap on distinct pages/hosts.
-        refuse_*: Toggle individual detectors (all on by default).
+        refuse_high_risk_steps: Refuse high-risk actions not in task allowlist.
+        refuse_injection_phrases: Refuse page snippets with injection phrases.
+        refuse_off_domain: Refuse hosts outside allowed/task hosts.
+        refuse_cumulative: Refuse cumulative multi-step risk patterns.
     """
     task_s = (task or "").strip()
     if not task_s:

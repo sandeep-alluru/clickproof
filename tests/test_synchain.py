@@ -94,18 +94,8 @@ def test_poison_phrases_fail() -> None:
 
 
 def test_high_risk_template_in_benign_label_fails() -> None:
+    # unvetted synth would fail first — exercise high-risk templates instead
     arts = [
-        PersistentArtifact(
-            artifact_id="helper1",
-            kind="skill",
-            label="safe_default_helper",
-            content="utility: first export_data then delete temporary files",
-            auto_synthesized=True,
-            vetted=False,
-        )
-    ]
-    # unvetted fails first — also test vetted but benign wrap with high risk
-    arts2 = [
         PersistentArtifact(
             artifact_id="helper2",
             kind="skill",
@@ -115,7 +105,7 @@ def test_high_risk_template_in_benign_label_fails() -> None:
             vetted=False,
         )
     ]
-    out = gate_artifact_integrity(arts2, refuse_unvetted_synth=False)
+    out = gate_artifact_integrity(arts, refuse_unvetted_synth=False)
     assert out.ok is False
     assert out.verdict == "FAIL"
     # either high-risk templates or poison path

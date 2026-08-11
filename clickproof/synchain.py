@@ -123,7 +123,9 @@ def _as_artifact(item: Any, index: int = 0) -> PersistentArtifact:
         return item
     if not isinstance(item, dict):
         raise TypeError(f"artifact must be PersistentArtifact or dict, got {type(item)!r}")
-    aid = str(item.get("artifact_id") or item.get("id") or item.get("name") or f"art_{index}").strip()
+    aid = str(
+        item.get("artifact_id") or item.get("id") or item.get("name") or f"art_{index}"
+    ).strip()
     content = str(item.get("content") or item.get("body") or item.get("text") or "")
     fp = str(item.get("content_fp") or item.get("fingerprint") or item.get("hash") or "")
     return PersistentArtifact(
@@ -189,7 +191,9 @@ def analyze_artifact_integrity(
 
         phrases = detect_injection_phrases(
             art.content,
-            phrases=injection_phrases if injection_phrases is not None else DEFAULT_INJECTION_PHRASES,
+            phrases=injection_phrases
+            if injection_phrases is not None
+            else DEFAULT_INJECTION_PHRASES,
         )
         if phrases:
             poison.append(art.artifact_id)
