@@ -31,7 +31,7 @@ def test_detect_injection_phrases() -> None:
 
 def test_hosts_from_task() -> None:
     h = hosts_from_task("Open https://docs.example.com/guide and read the FAQ")
-    assert "docs.example.com" in h
+    assert sorted(h) == ["docs.example.com"]
 
 
 def test_empty_task_fails_loud() -> None:
