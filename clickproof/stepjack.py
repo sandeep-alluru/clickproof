@@ -203,19 +203,33 @@ def detect_injection_phrases(
 
 
 def hosts_from_task(task: str) -> set[str]:
-    """Extract likely allowed hosts mentioned in the task string."""
+    """Extract likely allowed hosts mentioned in the task string.
+
+    Hosts are taken from ``urlparse(...).hostname`` (not raw substring
+    matches) so allowlists compare real hostnames (CodeQL
+    py/incomplete-url-substring-sanitization).
+    """
     task = task or ""
     hosts: set[str] = set()
-    # URLs
-    for m in re.finditer(r"https?://([^/\s]+)", task, flags=re.I):
-        hosts.add(m.group(1).lower())
-    # bare domains
+    for m in re.finditer(r"https?://[^\s]+", task, flags=re.I):
+        try:
+            host = urlparse(m.group(0)).hostname
+        except Exception:
+            host = None
+        if host:
+            hosts.add(host.lower())
+    # bare domains → hostname via urlparse on synthetic URL
     for m in re.finditer(
         r"\b([a-z0-9][-a-z0-9]*\.(?:com|org|net|io|dev|app|gov|edu)(?:\.[a-z]{2})?)\b",
         task,
         flags=re.I,
     ):
-        hosts.add(m.group(1).lower())
+        try:
+            host = urlparse("https://" + m.group(1)).hostname
+        except Exception:
+            host = None
+        if host:
+            hosts.add(host.lower())
     return hosts
 
 
