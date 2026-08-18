@@ -176,98 +176,126 @@ def run_server() -> None:
     async def list_tools() -> list[Tool]:
         return [
             Tool(
-                name="add_ui_fact",
-                description="Add a UI behavioral fact to the clickproof store.",
-                inputSchema={
-                    "type": "object",
-                    "properties": {
-                        "app_name": {"type": "string"},
-                        "app_version": {"type": "string"},
-                        "element": {"type": "string"},
-                        "action": {"type": "string"},
-                        "outcome": {"type": "string"},
-                        "context": {"type": "string", "default": ""},
-                        "confidence": {"type": "number", "default": 1.0},
-                    },
-                    "required": ["app_name", "app_version", "element", "action", "outcome"],
-                },
-            ),
-            Tool(
-                name="query_facts",
-                description="Query UI behavioral facts for an application.",
-                inputSchema={
-                    "type": "object",
-                    "properties": {
-                        "app_name": {"type": "string"},
-                        "app_version": {"type": "string"},
-                        "min_score": {"type": "number", "default": 0.5},
-                    },
-                    "required": ["app_name"],
-                },
-            ),
-            Tool(
-                name="bootstrap_context",
-                description="Get a text summary of known facts for agent context injection.",
-                inputSchema={
-                    "type": "object",
-                    "properties": {
-                        "app_name": {"type": "string"},
-                        "app_version": {"type": "string", "default": "unknown"},
-                    },
-                    "required": ["app_name"],
-                },
-            ),
-            Tool(
                 name="clickproof_add_fact",
-                description="Store a UI behavioral fact for an application.",
+                description=(
+                    "Store a durable UI behavioral fact for a computer-use agent. "
+                    "Use when the agent learns that a specific UI element performs a known "
+                    "action/outcome (e.g. export-csv-button -> opens-download-dialog). "
+                    "Do not use for one-off DOM snapshots; use clickproof_observe to confirm "
+                    "or refute an existing fact after a later run."
+                ),
                 inputSchema={
                     "type": "object",
                     "properties": {
-                        "app_name": {"type": "string"},
-                        "app_version": {"type": "string"},
-                        "element": {"type": "string"},
-                        "action": {"type": "string"},
-                        "outcome": {"type": "string"},
-                        "context": {"type": "string", "default": ""},
-                        "confidence": {"type": "number", "default": 1.0},
+                        "app_name": {
+                            "type": "string",
+                            "description": "Application identifier, e.g. 'salesforce'.",
+                        },
+                        "app_version": {
+                            "type": "string",
+                            "description": "App version string that scopes the fact, e.g. '2025.11'.",
+                        },
+                        "element": {
+                            "type": "string",
+                            "description": "Semantic UI element id, e.g. 'export-csv-button'.",
+                        },
+                        "action": {
+                            "type": "string",
+                            "description": "Agent action verb: click, type, or navigate.",
+                        },
+                        "outcome": {
+                            "type": "string",
+                            "description": "Observed result, e.g. 'opens-download-dialog'.",
+                        },
+                        "context": {
+                            "type": "string",
+                            "description": "Optional surrounding UI context that disambiguates the element.",
+                            "default": "",
+                        },
+                        "confidence": {
+                            "type": "number",
+                            "description": "Initial confidence in [0.0, 1.0]. Default 1.0.",
+                            "default": 1.0,
+                        },
                     },
                     "required": ["app_name", "app_version", "element", "action", "outcome"],
                 },
             ),
             Tool(
                 name="clickproof_observe",
-                description="Record a FactObservation confirming or refuting a UIFact.",
+                description=(
+                    "Record whether a previously stored UIFact still holds after an agent run. "
+                    "Use after attempting the action described by an existing fact. "
+                    "Pass confirmed=true when the outcome matched; false when it failed or changed. "
+                    "Do not use this to create new facts — call clickproof_add_fact first."
+                ),
                 inputSchema={
                     "type": "object",
                     "properties": {
-                        "fact_id": {"type": "string"},
-                        "confirmed": {"type": "boolean"},
-                        "agent_run_id": {"type": "string", "default": ""},
+                        "fact_id": {
+                            "type": "string",
+                            "description": "ID returned by clickproof_add_fact.",
+                        },
+                        "confirmed": {
+                            "type": "boolean",
+                            "description": "True if the fact's outcome still held; false if refuted.",
+                        },
+                        "agent_run_id": {
+                            "type": "string",
+                            "description": "Optional id of the agent run that produced this observation.",
+                            "default": "",
+                        },
                     },
                     "required": ["fact_id", "confirmed"],
                 },
             ),
             Tool(
                 name="clickproof_query",
-                description="Query scored UI behavioral facts for an application.",
+                description=(
+                    "Return scored UI behavioral facts for an application, filtered by min_score. "
+                    "Use before acting in a UI to avoid ghost clicks on elements whose behavior "
+                    "is unknown or low-confidence. Prefer clickproof_bootstrap when you need a "
+                    "ready-to-inject text summary instead of structured JSON."
+                ),
                 inputSchema={
                     "type": "object",
                     "properties": {
-                        "app_name": {"type": "string"},
-                        "app_version": {"type": "string"},
-                        "min_score": {"type": "number", "default": 0.5},
+                        "app_name": {
+                            "type": "string",
+                            "description": "Application name to query.",
+                        },
+                        "app_version": {
+                            "type": "string",
+                            "description": "Optional version filter; omit to search all versions.",
+                        },
+                        "min_score": {
+                            "type": "number",
+                            "description": "Minimum confidence score threshold in [0.0, 1.0]. Default 0.5.",
+                            "default": 0.5,
+                        },
                     },
                     "required": ["app_name"],
                 },
             ),
             Tool(
                 name="clickproof_bootstrap",
-                description="Get a bootstrap context string for an application.",
+                description=(
+                    "Build a markdown summary of known UI facts for an app, suitable for "
+                    "prepending to an agent system prompt. Use at session start. "
+                    "Use clickproof_query instead when the agent needs structured fact/score objects."
+                ),
                 inputSchema={
                     "type": "object",
                     "properties": {
-                        "app_name": {"type": "string"},
-                        "app_version": {"type": "string", "default": "unknown"},
+                        "app_name": {
+                            "type": "string",
+                            "description": "Application to summarize.",
+                        },
+                        "app_version": {
+                            "type": "string",
+                            "description": "Optional version scope. Default 'unknown'.",
+                            "default": "unknown",
+                        },
                     },
                     "required": ["app_name"],
                 },
@@ -277,14 +305,8 @@ def run_server() -> None:
     @server.call_tool()
     async def call_tool(name: str, arguments: dict[str, Any]) -> list[TextContent]:
 
-        if name == "add_ui_fact":
-            result: Any = add_ui_fact(**arguments)
-        elif name == "query_facts":
-            result = query_facts(**arguments)
-        elif name == "bootstrap_context":
-            result = bootstrap_context(**arguments)
-        elif name == "clickproof_add_fact":
-            result = clickproof_add_fact(**arguments)
+        if name == "clickproof_add_fact":
+            result: Any = clickproof_add_fact(**arguments)
         elif name == "clickproof_observe":
             result = clickproof_observe(**arguments)
         elif name == "clickproof_query":
