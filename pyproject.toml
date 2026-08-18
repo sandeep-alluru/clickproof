@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "clickproof"
-version = "0.1.4"
+version = "0.1.5"
 description = "Persistent GUI behavioral facts for computer-use agents"
 readme = "README.md"
 license = { file = "LICENSE" }
@@ -60,6 +60,9 @@ Repository    = "https://github.com/sandeep-alluru/clickproof"
 Documentation = "https://sandeep-alluru.github.io/clickproof"
 Changelog     = "https://github.com/sandeep-alluru/clickproof/blob/main/CHANGELOG.md"
 Issues        = "https://github.com/sandeep-alluru/clickproof/issues"
+
+[tool.hatch.build.targets.wheel]
+packages = ["clickproof"]
 
 [tool.ruff]
 line-length    = 100
